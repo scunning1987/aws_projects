@@ -240,7 +240,7 @@ Resources:
               bucket = os.environ['BUCKET']
 
               # Manifest File containning URL's on github
-              cloudformation_manifest = "https://raw.githubusercontent.com/scunning1987/medialive_multi_channel_controller/main/manifest.txt"
+              cloudformation_manifest = "https://raw.githubusercontent.com/scunning1987/aws_projects/main/377/manifest.txt"
 
               # Get the manifest from GitHub
               get_response = http.request('GET', cloudformation_manifest)
@@ -358,15 +358,142 @@ Resources:
       - S3AccessPolicy
 
 
-  #################
-  ## API Gateway
-  #################
+    #################
+    ## API Gateway
+    #################
+    ApiGateway:
+      Type: AWS::ApiGateway::RestApi
+      Properties:
+        Name: !Sub ${DeploymentName}-emlctrl-api-handler
+        Description: !Sub API Handler [${DeploymentName}]
+        Tags:
+          - Key: DeploymentName
+            Value: !Ref DeploymentName
 
-  # you complete me
+    ProxyPlusResourceCtrl:
+      Type: AWS::ApiGateway::Resource
+      Properties:
+        ParentId: !GetAtt ApiGateway.RootResourceId
+        PathPart: 'dashboard-ctrl'
+        RestApiId: !Ref ApiGateway
 
-  ### Need CloudFront too
-  ### possibly WAF also
-  ###
+    ProxyPlusResourceCfgRoot:
+      Type: AWS::ApiGateway::Resource
+      Properties:
+        ParentId: !GetAtt ApiGateway.RootResourceId
+        PathPart: 'dashboard-cfg'
+        RestApiId: !Ref ApiGateway
+
+    ProxyPlusResourceCfgProxy:
+      Type: AWS::ApiGateway::Resource
+      Properties:
+        ParentId: !GetAtt ApiGateway.ProxyPlusResourceCfgRoot
+        PathPart: '{proxy+}'
+        RestApiId: !Ref ApiGateway
+
+    AnyMethod:
+      Type: AWS::ApiGateway::Method
+      Properties:
+        AuthorizationType: NONE
+        HttpMethod: ANY
+        Integration:
+          #Credentials: !GetAtt ApiGatewayRole.Arn
+          IntegrationHttpMethod: POST
+          IntegrationResponses:
+            - StatusCode: '200'
+          Type: AWS_PROXY
+          Uri: !Join
+            - ''
+            - - 'arn:aws:apigateway:'
+              - !Ref 'AWS::Region'
+              - :lambda:path/2015-03-31/functions/
+              - !GetAtt MediaLiveControlConfig.Arn
+              - /invocations
+        MethodResponses:
+          - StatusCode: 200
+            ResponseModels:
+              application/json: !Ref EmptyApiModel
+        ResourceId: !Ref ProxyPlusResourceCfgProxy
+        RestApiId: !Ref ApiGateway
+
+    GetMethod:
+      Type: AWS::ApiGateway::Method
+      Properties:
+        AuthorizationType: NONE
+        HttpMethod: GET
+        Integration:
+          #Credentials: !GetAtt ApiGatewayRole.Arn
+          IntegrationHttpMethod: GET
+          IntegrationResponses:
+            - StatusCode: '200'
+          Type: AWS_PROXY
+          Uri: !Join
+            - ''
+            - - 'arn:aws:apigateway:'
+              - !Ref 'AWS::Region'
+              - :lambda:path/2015-03-31/functions/
+              - !GetAtt MediaLiveControlFunctions.Arn
+              - /invocations
+        MethodResponses:
+          - StatusCode: 200
+            ResponseModels:
+              application/json: !Ref EmptyApiModel
+        ResourceId: !Ref ProxyPlusResourceCtrl
+        RestApiId: !Ref ApiGateway
+
+    PutMethod:
+      Type: AWS::ApiGateway::Method
+      Properties:
+        AuthorizationType: NONE
+        HttpMethod: PUT
+        Integration:
+          #Credentials: !GetAtt ApiGatewayRole.Arn
+          IntegrationHttpMethod: PUT
+          IntegrationResponses:
+            - StatusCode: '200'
+          Type: AWS_PROXY
+          Uri: !Join
+            - ''
+            - - 'arn:aws:apigateway:'
+              - !Ref 'AWS::Region'
+              - :lambda:path/2015-03-31/functions/
+              - !GetAtt MediaLiveControlFunctions.Arn
+              - /invocations
+        MethodResponses:
+          - StatusCode: 200
+            ResponseModels:
+              application/json: !Ref EmptyApiModel
+        ResourceId: !Ref ProxyPlusResourceCtrl
+        RestApiId: !Ref ApiGateway
+
+    EmptyApiModel:
+      Type: AWS::ApiGateway::Model
+      Properties:
+        ContentType: application/json
+        Description: This is a default empty schema model
+        RestApiId: !Ref ApiGateway
+        Schema: {
+          "$schema": "http://json-schema.org/draft-04/schema#",
+          "title": "Empty Schema",
+          "type": "object"
+        }
+
+    Deployment:
+      Type: AWS::ApiGateway::Deployment
+      Properties:
+        Description: Production Deployment of Api Endpoint
+        RestApiId: !Ref ApiGateway
+      DependsOn:
+        - AnyMethod
+        - GetePutMethod
+
+    ApiStage:
+      Type: AWS::ApiGateway::Stage
+      Properties:
+        DeploymentId: !Ref Deployment
+        RestApiId: !Ref ApiGateway
+        StageName: v1
+
 
 #################################
 # Outputs
