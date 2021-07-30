@@ -1,0 +1,12 @@
+{
+  "channel_map": {
+    "1":[4856923,"MLS Channel 1","us-west-2","ws://34.212.225.202:8081/emx/20001","ws://34.212.225.202:8081/eml/20001",["s3://cunsco-media/vod_slates/promo1.mp4","s3://cunsco-media/vod_slates/promo2.mp4","s3://cunsco-media/vod_slates/promo3.mp4","s3://cunsco-media/vod_slates/promo4.mp4"]],
+    "2":[1809084,"MotoX Channel 1","us-west-2","ws://34.212.225.202:8081/emx/20002","ws://34.212.225.202:8081/eml/20002",["s3://cunsco-media/vod_slates/promo1.mp4","s3://cunsco-media/vod_slates/promo2.mp4","s3://cunsco-media/vod_slates/promo3.mp4","s3://cunsco-media/vod_slates/promo4.mp4"]],
+    "3":[8466103,"La Liga 1","us-west-2","ws://34.212.225.202:8081/emx/20003","ws://34.212.225.202:8081/eml/20003",["s3://cunsco-media/vod_slates/promo1.mp4","s3://cunsco-media/vod_slates/promo2.mp4","s3://cunsco-media/vod_slates/promo3.mp4","s3://cunsco-media/vod_slates/promo4.mp4"]],
+    "4":[790828,"Serie A 1","us-west-2","ws://34.212.225.202:8081/emx/20004","ws://34.212.225.202:8081/eml/20004",["s3://cunsco-media/vod_slates/promo1.mp4","s3://cunsco-media/vod_slates/promo2.mp4","s3://cunsco-media/vod_slates/promo3.mp4","s3://cunsco-media/vod_slates/promo4.mp4"]]
+  },
+  "vod_bucket":"schedule-action-assets",
+  "channel_start_slate":"s3://cunsco-east/INTRO.mp4",
+  "promo_bucket_region": "us-west-2",
+  "dashboard_title":"My Streaming Dashboard"
+}
