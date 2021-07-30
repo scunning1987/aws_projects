@@ -364,6 +364,10 @@ Resources:
 
   # you complete me
 
+  ### Need CloudFront too
+  ### possibly WAF also
+  ###
+
 #################################
 # Outputs
 #################################
