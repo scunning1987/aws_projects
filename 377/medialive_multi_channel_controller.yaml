@@ -525,7 +525,7 @@ Outputs:
     Value: https://ApiGateway.execute-api.AWSRegion.amazonaws.com/ApiStage/sample-configuration
     #Value: !Sub https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${ApiStage}/sample-configuration
 
-  APIEndpointURL:
+  ControlAPIEndpointURL:
     Description: API Endpoint for getting current config (GET), and updating config (PUT)
-    Value: https://ApiGateway.execute-api.AWSRegion.amazonaws.com/ApiStage/configuration
+    Value: https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${ApiStage}/${ProxyPlusResourceCtrl.PathPart}
     #Value: !Sub https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${ApiStage}/configuration

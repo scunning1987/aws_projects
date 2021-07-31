@@ -8,5 +8,6 @@
   "vod_bucket":"schedule-action-assets",
   "channel_start_slate":"s3://cunsco-east/INTRO.mp4",
   "promo_bucket_region": "us-west-2",
+  "control_api_endpoint_url": "https://jl66fjfil5.execute-api.us-west-2.amazonaws.com/eng/playout",
   "dashboard_title":"My Streaming Dashboard"
 }
