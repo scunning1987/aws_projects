@@ -1,6 +1,6 @@
 //
 
-const apiendpointurl = "https://jl66fjfil5.execute-api.us-west-2.amazonaws.com/eng/playout"
+//const apiendpointurl = "https://jl66fjfil5.execute-api.us-west-2.amazonaws.com/eng/playout"
 
 //// LEAVE CODE BELOW THIS LINE /////
 
@@ -22,6 +22,7 @@ function getConfig(){
     window.deployment_name = jdata.dashboard_title
     window.bucket = jdata.vod_bucket
     window.promo_bucket_region = jdata.promo_bucket_region
+    window.apiendpointurl = jdata.control_api_endpoint_url
     json_data = request.responseText
      } else {
     // Reached the server, but it returned an error
@@ -71,7 +72,7 @@ function chstartstopcontrol(action_type){
     alert("Please select a channel thumbnail first!")
   } else {
   document.getElementById(action_type).classList.add('pressedbutton');
-  console.log("action type: "+action_type+" for channel ID : "+live_event_map[pipSelector][0])
+  console.log("action type: "+action_type+" for channel ID : "+live_event_map[pipSelector].primary_channel_id)
   // API Call to start/stop channel
   channelStartStop(action_type)
 
@@ -89,8 +90,8 @@ function chliveswitch() {
   } else {
   document.getElementById('live').classList.add('pressedbutton');
   input = document.getElementById("live_source_dropdown_select").value
-  console.log("Switching to input: "+input+" for channel ID : "+live_event_map[pipSelector][0])
-  channelid = live_event_map[pipSelector][0] + ":" + live_event_map[pipSelector][2]
+  console.log("Switching to input: "+input+" for channel ID : "+live_event_map[pipSelector].primary_channel_id)
+  channelid = live_event_map[pipSelector].primary_channel_id + ":" + live_event_map[pipSelector].channel_region
   emlSwitchAction(input, channelid, "", "immediateSwitchLive", "", 200, "master", "immediateswitch")
   }
 
@@ -107,8 +108,8 @@ function chvodswitch(){
   } else {
   document.getElementById('vod').classList.add('pressedbutton');
   input = document.getElementById("vod_source_dropdown_select").value
-  console.log("Switching to input: "+input+" for channel ID : "+live_event_map[pipSelector][0])
-  channelid = live_event_map[pipSelector][0] + ":" + live_event_map[pipSelector][2]
+  console.log("Switching to input: "+input+" for channel ID : "+live_event_map[pipSelector].primary_channel_id)
+  channelid = live_event_map[pipSelector].primary_channel_id + ":" + live_event_map[pipSelector].channel_region
   emlSwitchAction(input, channelid, bucket, "immediateSwitch", "", 200, "master", "immediateswitch")
   }
 
@@ -123,15 +124,15 @@ function chpromoins(promo_number){
     console.log("Operator has not selected a channel thumbnail. Select a thumbnail first before an action can be performed")
     alert("Please select a channel thumbnail first!")
   } else {
-    console.log("Selected Channel ID : "+live_event_map[pipSelector][0])
-    console.log("Found " + live_event_map[pipSelector][5].length + " promos in channnel map")
+    console.log("Selected Channel ID : "+live_event_map[pipSelector].primary_channel_id)
+    console.log("Found " + live_event_map[pipSelector].promos.length + " promos in channnel map")
 
-    if ( promo_number > live_event_map[pipSelector][5].length ) {
+    if ( promo_number > live_event_map[pipSelector].promos.length ) {
       alert("Cannot play promo, it doesn't exist. You need to update the channel map via API with the promo URL")
 
     } else {
     document.getElementById('promo'+promo_number).classList.add('pressedbutton');
-    promo_to_play = live_event_map[pipSelector][5][promo_number-1]
+    promo_to_play = live_event_map[pipSelector].promos[promo_number-1]
     console.log("Sending an API call to MediaLive to start promo : " + promo_to_play)
     s3_url = new URL(promo_to_play.replace("s3://","https://"))
     bucket = s3_url.hostname
@@ -139,7 +140,7 @@ function chpromoins(promo_number){
     console.log("Promo bucket : " + bucket)
     console.log("Promo key : " + input)
 
-    channelid = live_event_map[pipSelector][0] + ":" + live_event_map[pipSelector][2]
+    channelid = live_event_map[pipSelector].primary_channel_id + ":" + live_event_map[pipSelector].channel_region
     console.log("Submitting API Call to insert promo now")
     emlSwitchAction(input, channelid, bucket, "immediateContinue", "", 200, "master", "")
     }
@@ -169,7 +170,7 @@ function channelDropdownPopulate(){
   for (channel in live_event_map){
     //live_event_map[channel][3]
     option = document.createElement('option');
-    option.text = live_event_map[channel][1];
+    option.text = live_event_map[channel].channel_friendly_name;
     option.value = channel;
     dropdown.add(option)
   }
@@ -183,20 +184,20 @@ document.getElementById("channel_selector").onclick = function () {
   pipSelector = document.getElementById("channel_selector").value
   console.log("Channel " + pipSelector + " has been selected from the dropdown menu")
 
-  if ( pipSelector != "" ) {
+  if ( pipSelector !== "" ) {
     channelState(pipSelector)
   }
 
   // Print channel information to channel info box
   // id to populate = channel_info
-  document.getElementById("channel_info").innerHTML = '<p> Channel Name : '+live_event_map[pipSelector][1]+' </p>'
-  document.getElementById("channel_info").innerHTML += '<p> Channel ID : '+live_event_map[pipSelector][0]+' </p>'
-  document.getElementById("channel_info").innerHTML += '<p> AWS Region : '+live_event_map[pipSelector][2]+' </p>'
+  document.getElementById("channel_info").innerHTML = '<p> Channel Name : '+live_event_map[pipSelector].channel_friendly_name+' </p>'
+  document.getElementById("channel_info").innerHTML += '<p> Channel ID : '+live_event_map[pipSelector].primary_channel_id+' </p>'
+  document.getElementById("channel_info").innerHTML += '<p> AWS Region : '+live_event_map[pipSelector].channel_region+' </p>'
 
   document.getElementById("channel_info").innerHTML += '<h3> Promo Videos </h3>'
 
-  for (s3_promo in live_event_map[pipSelector][5]){
-    s3_promo_url = new URL(live_event_map[pipSelector][5][s3_promo].replace("s3://","https://"))
+  for (s3_promo in live_event_map[pipSelector].promos){
+    s3_promo_url = new URL(live_event_map[pipSelector].promos[s3_promo].replace("s3://","https://"))
     promo_bucket = s3_promo_url.hostname
     promo_key = s3_promo_url.pathname.replace(/^\/+/, '')
     s3_https_url = 'https://'+promo_bucket+'.s3-'+promo_bucket_region+'.amazonaws.com/'+promo_key
@@ -236,9 +237,16 @@ document.getElementById("channel_selector").onclick = function () {
       function doStart () {
         console.log("initializing new sdlp players")
         for (var i = 0; i < 2; i++) {
+          var streamurl;
+          if ( i == 0) {
+            streamurl = live_event_map[pipSelector].low_latency_url_source
+          } else {
+            streamurl = live_event_map[pipSelector].low_latency_url_medialive
+          }
+
           var player = SLDP.init({
             container:          'player-wrp-' + (i + 1),
-            stream_url:         live_event_map[pipSelector][3+i],
+            stream_url:         streamurl,
             buffering:          500,
             autoplay:           true,
             muted:              true,
@@ -285,7 +293,11 @@ if ( parseInt(total_channels) < 9 ) {
 }
 
 setInterval(function() {
-  channelState()
+
+  if ( pipSelector !== "" ) {
+    channelState(pipSelector)
+  }
+
 }, 5000);
 
 /// API Calls
@@ -294,7 +306,7 @@ setInterval(function() {
 function channelState() {
     console.log("channel state api call: initializing")
     var channellist = [];
-    var channelid = live_event_map[pipSelector][0]  + ":" + live_event_map[pipSelector][2]
+    var channelid = live_event_map[pipSelector].primary_channel_id  + ":" + live_event_map[pipSelector].channel_region
 
     var param1 = "awsaccount=master";
     var param2 = "&functiontorun=describeChannelState"
@@ -311,7 +323,7 @@ function channelState() {
     request.onload = function() {
       if (request.status === 200) {
         const state_data = JSON.parse(request.responseText);
-        console.log("channel state api call response : " + state_data)
+        console.log("channel state api call response : " + JSON.stringify(state_data))
         document.getElementById('channel_status').innerHTML = '<h3>Channel Status:</br>'+state_data.status+'</h3>'
        } else {
          error_message = "Unable to get channel status"
@@ -379,7 +391,7 @@ function s3getObjectsAPI(bucket, apiendpointurl) {
 
 function getLiveInputs(apiendpointurl) {
     console.log("get live inputs api call: initializing")
-    var channelid = live_event_map[pipSelector][0] + ":" + live_event_map[pipSelector][2];
+    var channelid = live_event_map[pipSelector].primary_channel_id + ":" + live_event_map[pipSelector].channel_region;
     var input = document.getElementById("live_source_dropdown_select").value;
 
     var param1 = "awsaccount=master";
@@ -467,25 +479,31 @@ function channelStartStop(startstop){
       return;
     }
 
-    console.log("channel start-stop action api call: initializing")
-    channelid = live_event_map[pipSelector][0] + ":" + live_event_map[pipSelector][2];
+    channels = [ live_event_map[pipSelector].primary_channel_id , live_event_map[pipSelector].proxy_gen_channel ]
 
-    var param1 = "awsaccount=master";
-    var param2 = "&functiontorun=channelStartStop"
-    var param3 = "&channelid="+channelid;
-    var param4 = "&maxresults=200";
-    var param5 = "&bucket="+slate_bucket + ":" + startup_slate_key.replace(/\//g,"%2F");
-    var param6 = "&input="+startstop;
-    var param7 = "&follow=";
-    var param8 = "&duration=";
-    var url = apiendpointurl+"?"+param1+param2+param3+param4+param5+param6+param7+param8
-    console.log("channel start-stop action api call - executing : " + channelid)
+    for ( i in channels ) {
 
-    var putReq = new XMLHttpRequest();
-    putReq.open("PUT", url, false);
-    putReq.setRequestHeader("Accept","*/*");
-    putReq.send();
+        console.log("channel start-stop action api call: initializing")
+        console.log("performing api action on channel id : " + channels[i])
+        channelid = channels[i] + ":" + live_event_map[pipSelector].channel_region;
 
+        var param1 = "awsaccount=master";
+        var param2 = "&functiontorun=channelStartStop"
+        var param3 = "&channelid="+channelid;
+        var param4 = "&maxresults=200";
+        var param5 = "&bucket="+slate_bucket + ":" + startup_slate_key.replace(/\//g,"%2F");
+        var param6 = "&input="+startstop;
+        var param7 = "&follow=";
+        var param8 = "&duration=";
+        var url = apiendpointurl+"?"+param1+param2+param3+param4+param5+param6+param7+param8
+        console.log("channel start-stop action api call - executing : " + channelid)
+
+        var putReq = new XMLHttpRequest();
+        putReq.open("PUT", url, false);
+        putReq.setRequestHeader("Accept","*/*");
+        putReq.send();
+
+    }
     alert("Channel state is changing, please be patient. This may take 60-90 seconds")
 }
 

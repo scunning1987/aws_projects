@@ -27,7 +27,7 @@ def lambda_handler(event, context):
             "headers":{
                 "Content-Type":"application/json"
             },
-            "body":json.dumps({"status":message})
+            "body":json.dumps(message)
         }
         return response_body
 
@@ -45,7 +45,7 @@ def lambda_handler(event, context):
                 return api_response(200,json.loads(response_str))
             except Exception as e:
                 LOGGER.error("Unable to get config from S3, please contact support - exception : %s " % (e))
-                return api_response(500,"Unable to get config from S3, please contact support")
+                return api_response(500,{"status":"Unable to get config from S3, please contact support"})
 
         elif event['pathParameters']['proxy'] == "template":
             LOGGER.info("Caller wants template config returned")
@@ -57,11 +57,11 @@ def lambda_handler(event, context):
                 return api_response(200,json.loads(response_str))
             except Exception as e:
                 LOGGER.error("Unable to get config from S3, please contact support - exception : %s " % (e))
-                return api_response(500,"Unable to get config from S3, please contact support")
+                return api_response(500,{"status":"Unable to get config from S3, please contact support"})
 
         else:
             LOGGER.error("Caller has sent unknown get resource path, returning HTTP500.. path sent : %s" % (event['pathParameters']['proxy']))
-            return api_response(500,"Caller has sent unknown get resource path, please use 'dashboard-cfg/existing' or 'dashboard-cfg/template'")
+            return api_response(500,{"status":"Caller has sent unknown get resource path, please use 'dashboard-cfg/existing' or 'dashboard-cfg/template'"})
 
     elif event['httpMethod'] == "PUT":
         LOGGER.info("The API request was a PUT request")
@@ -71,17 +71,17 @@ def lambda_handler(event, context):
 
         # check length
         if len(body_json) < 1:
-            return api_response(500,"malformed api body, please refer to the template")
+            return api_response(500,{"status":"malformed api body, please refer to the template"})
 
         # check main keys are present
         main_keys = ["channel_map","vod_bucket","channel_start_slate","dashboard_title"]
         for main_key in list(body_json.keys()):
             if main_key not in main_keys:
-                return api_response(500,"malformed api body, please refer to the template")
+                return api_response(500,{"status":"malformed api body, please refer to the template"})
 
         # check channel start slate references mp4
         if ".mp4" not in str(body_json['channel_start_slate']).lower():
-            return api_response(500,"Channel start slate must reference an MP4 file")
+            return api_response(500,{"status":"Channel start slate must reference an MP4 file"})
 
         # add check for bucket...
 
