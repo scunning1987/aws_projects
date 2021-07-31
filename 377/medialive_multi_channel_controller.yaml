@@ -521,11 +521,13 @@ Outputs:
     Value: !Sub https://${S3Bucket}.s3.${AWS::Region}.amazonaws.com/${FileMover.ui}
 
   APIEndpointURLGetSample:
-    Description: API Endpoint for getting sample configuration
-    Value: https://ApiGateway.execute-api.AWSRegion.amazonaws.com/ApiStage/sample-configuration
-    #Value: !Sub https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${ApiStage}/sample-configuration
+    Description: API Endpoint for getting sample configuration, method - GET
+    Value: !Sub https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${ApiStage}/${ProxyPlusResourceCfgRoot}/template
 
-  ControlAPIEndpointURL:
-    Description: API Endpoint for getting current config (GET), and updating config (PUT)
-    Value: https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${ApiStage}/${ProxyPlusResourceCtrl.PathPart}
-    #Value: !Sub https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${ApiStage}/configuration
+  APIEndpointURLGetConfig:
+    Description: API Endpoint for getting existing configuration, method - GET
+    Value: !Sub https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${ApiStage}/${ProxyPlusResourceCfgRoot}/existing
+
+  APIEndpointURLPutConfig:
+    Description: API Endpoint for updating existing configuration, method - PUT
+    Value: !Sub https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${ApiStage}/${ProxyPlusResourceCfgRoot}/update
