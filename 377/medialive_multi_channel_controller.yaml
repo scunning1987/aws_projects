@@ -522,12 +522,12 @@ Outputs:
 
   APIEndpointURLGetSample:
     Description: API Endpoint for getting sample configuration, method - GET
-    Value: !Sub https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${ApiStage}/${ProxyPlusResourceCfgRoot}/template
+    Value: !Sub https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${ApiStage}/${ProxyPlusResourceCfgRoot.Path}/template
 
   APIEndpointURLGetConfig:
     Description: API Endpoint for getting existing configuration, method - GET
-    Value: !Sub https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${ApiStage}/${ProxyPlusResourceCfgRoot}/existing
+    Value: !Sub https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${ApiStage}/${ProxyPlusResourceCfgRoot.Path}/existing
 
   APIEndpointURLPutConfig:
     Description: API Endpoint for updating existing configuration, method - PUT
-    Value: !Sub https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${ApiStage}/${ProxyPlusResourceCfgRoot}/update
+    Value: !Sub https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${ApiStage}/${ProxyPlusResourceCfgRoot.Path}/update
