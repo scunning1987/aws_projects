@@ -429,7 +429,7 @@ Resources:
       HttpMethod: GET
       Integration:
         #Credentials: !GetAtt ApiGatewayRole.Arn
-        IntegrationHttpMethod: GET
+        IntegrationHttpMethod: POST
         IntegrationResponses:
           - StatusCode: '200'
         Type: AWS_PROXY
@@ -456,7 +456,7 @@ Resources:
       HttpMethod: PUT
       Integration:
         #Credentials: !GetAtt ApiGatewayRole.Arn
-        IntegrationHttpMethod: PUT
+        IntegrationHttpMethod: POST
         IntegrationResponses:
           - StatusCode: '200'
         Type: AWS_PROXY
@@ -494,14 +494,14 @@ Resources:
         RequestTemplates:
           application/json: '{"statusCode": 200}'
         Type: MOCK
-        MethodResponses:
-          - StatusCode: 200
-            ResponseModels:
-              application/json: 'Empty'
-            ResponseParameters:
-              method.response.header.Access-Control-Allow-Headers: false
-              method.response.header.Access-Control-Allow-Methods: false
-              method.response.header.Access-Control-Allow-Origin: false
+      MethodResponses:
+        - StatusCode: 200
+          ResponseModels:
+            application/json: 'Empty'
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: false
+            method.response.header.Access-Control-Allow-Methods: false
+            method.response.header.Access-Control-Allow-Origin: true
       ResourceId: !Ref ProxyPlusResourceCtrl
       RestApiId: !Ref ApiGateway
     DependsOn:
