@@ -61,7 +61,7 @@ def lambda_handler(event, context):
 
         else:
             LOGGER.error("Caller has sent unknown get resource path, returning HTTP500.. path sent : %s" % (event['pathParameters']['proxy']))
-            return api_response(500,"Caller has sent unknown get resource path, please use 'dashboard-config/existing' or 'dashboard-config/template'")
+            return api_response(500,"Caller has sent unknown get resource path, please use 'dashboard-cfg/existing' or 'dashboard-cfg/template'")
 
     elif event['httpMethod'] == "PUT":
         LOGGER.info("The API request was a PUT request")
