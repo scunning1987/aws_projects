@@ -90,7 +90,7 @@ Resources:
       FunctionName: !GetAtt MediaLiveControlFunctions.Arn
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGateway}/*/*/dashboard-ctrl/*"
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGateway}/*/*/dashboard-ctrl"
     DependsOn:
       - MediaLiveControlFunctions
 
