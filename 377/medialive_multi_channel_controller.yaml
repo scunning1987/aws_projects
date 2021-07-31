@@ -91,7 +91,7 @@ Resources:
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
       SourceAccount: !Ref 'AWS::AccountId'
-      #ArnLike: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiStage}/* ## when we get API gateway in CF template we can uncomment this
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGateway}/*/*/*"
     DependsOn:
       - MediaLiveControlFunctions
 
@@ -102,7 +102,7 @@ Resources:
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
       SourceAccount: !Ref 'AWS::AccountId'
-      #ArnLike: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiStage}/*
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGateway}/*/*/*"
     DependsOn:
       - MediaLiveControlConfig
 
@@ -522,12 +522,25 @@ Outputs:
 
   APIEndpointURLGetSample:
     Description: API Endpoint for getting sample configuration, method - GET
-    Value: !Sub https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${ApiStage}/${ProxyPlusResourceCfgRoot.Path}/template
+    #Value: !Sub https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${ApiStage}/${ProxyPlusResourceCfgRoot.PathPart}/template
+    Value: !Join
+      - ''
+      - - 'https://'
+        - !Ref ApiGateway
+        - '.execute-api.'
+        - !Ref 'AWS::Region'
+        - '.amazonaws.com/'
+        - !Ref ApiStage
+        - '/dashboard-cfg/template'
 
   APIEndpointURLGetConfig:
     Description: API Endpoint for getting existing configuration, method - GET
-    Value: !Sub https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${ApiStage}/${ProxyPlusResourceCfgRoot.Path}/existing
+    Value: !Sub https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${ApiStage}/dashboard-cfg/existing
 
   APIEndpointURLPutConfig:
     Description: API Endpoint for updating existing configuration, method - PUT
-    Value: !Sub https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${ApiStage}/${ProxyPlusResourceCfgRoot.Path}/update
+    Value: !Sub https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${ApiStage}/dashboard-cfg/update
+
+  APIEndpointURLCTRL:
+    Description: API Endpoint to control the MediaLive channels. This URL is needed when updating the config
+    Value: !Sub https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${ApiStage}/dashboard-ctrl
