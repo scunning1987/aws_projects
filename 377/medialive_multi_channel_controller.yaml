@@ -7,7 +7,7 @@ Parameters:
   S3PolicyForMediaAccess:
     Description: Policy that gives Lambda access to customer managed S3 Bucket
     Type: String
-    AllowedPattern: ^arn:aws:iam::\d{12}:policy/:+
+    AllowedPattern: ^arn:aws:iam::.+ #(\d{12}|aws):policy/:+
     Default: arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
 
 ## Resources
