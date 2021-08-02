@@ -503,14 +503,18 @@ def lambda_handler(event, context):
                 slate_path = event['bucket'].split(":")[1].replace("%2F","/")
                 inputs = list_inputs("dictionary") # return dictionary : file, live, livelist
 
-                batch_update("immediate", "", inputs, slate_path,channel_input_attachments)
-
+                try:
+                    batch_update("immediate", "", inputs, slate_path,channel_input_attachments)
+                except:
+                    return "Couldnt change input to slate"
                 ## start api
                 try:
                     response = client.start_channel(ChannelId=channelid)
                     return response
                 except Exception as e:
                     return e
+            else:
+                return "Channel is already Running"
 
         else: # input is stop
             if channel_status == "IDLE" or channel_status == "STOPPING":
@@ -802,4 +806,3 @@ def lambda_handler(event, context):
     else: # return error#
         response = {"error":"invalid functiontorun value sent to function"}
         return api_response(500,response)
-
