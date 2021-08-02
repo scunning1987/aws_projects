@@ -11,7 +11,7 @@ Parameters:
 
 ## Conditions
 Conditions:
-  CustomPolicyAdder: !Not
+  CustomerManagedPolicyAdder: !Not
     - !Equals
       - !Ref S3PolicyForMediaAccess
       - ''
@@ -40,9 +40,8 @@ Resources:
   LambdaRole:
     Type: AWS::IAM::Role
     Properties:
-      #RoleName: !Sub ${DeploymentName}
       ManagedPolicyArns:
-        - ''
+        - !Sub ${S3PolicyForMediaAccess}
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
