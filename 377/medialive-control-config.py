@@ -74,7 +74,7 @@ def lambda_handler(event, context):
             return api_response(500,{"status":"malformed api body, please refer to the template"})
 
         # check main keys are present
-        main_keys = ["channel_map","vod_bucket","channel_start_slate","dashboard_title"]
+        main_keys = ["channel_map","vod_bucket","channel_start_slate","dashboard_title","control_api_endpoint_url","promo_bucket_region"]
         for main_key in list(body_json.keys()):
             if main_key not in main_keys:
                 return api_response(500,{"status":"malformed api body, please refer to the template"})
@@ -92,6 +92,26 @@ def lambda_handler(event, context):
         json_exceptions.clear()
 
         # iterate through channel_map to make sure everything is valid
+
+        '''
+        "channel_map": {
+            "1": {
+              "primary_channel_id": 4856923,
+              "proxy_gen_channel": 123,
+              "channel_friendly_name": "MLS Channel 1",
+              "channel_region": "us-west-2",
+              "low_latency_url_source": "ws://34.212.225.202:8081/emx/20001",
+              "low_latency_url_medialive": "ws://34.212.225.202:8081/eml/20001",
+              "promos": [
+                "s3://cunsco-media/vod_slates/promo1.mp4",
+                "s3://cunsco-media/vod_slates/promo2.mp4",
+                "s3://cunsco-media/vod_slates/promo3.mp4",
+                "s3://cunsco-media/vod_slates/promo4.mp4"
+              ]
+            },
+        '''
+
+
         channel_number = 1
         channel_map = body_json['channel_map']
         try:
@@ -100,38 +120,27 @@ def lambda_handler(event, context):
                 if channel_number != int(channel):
                     return api_response(500,"Channel key must look like an integer and start from 1 and increment by 1 for each channel. please refer to the template")
 
-                ## check value list length to be 6
-                if isinstance(channel_map[channel],list) == False:
-                    if len(channel_map[channel]) != 6:
-                        return api_response(500,"Channel key must contain a list value with 6 entries: channelid (int), channel code (str), aws region (str), https jpg url (str), hls url (str), promo videos (list, 4 entries)")
+                ## check channel map is of type dictionary
+                if isinstance(channel_map[channel],dict) == False:
+                    return api_response(500,{"status":"channel key is not of type dictionary"})
 
-                ## check item 0 is number (this is medialive channnel id)
-                if isinstance(channel_map[channel][0],int) == False:
-                    return api_response(500,"Channelid must be a valid integer")
+                # Check channel map keys are present
+                channel_keys = ["primary_channel_id","proxy_gen_channel","channel_friendly_name","channel_region","low_latency_url_source","low_latency_url_medialive","promos"]
+                for channel_key in list(channel_map[channel].keys()):
+                    if channel_key not in channel_keys:
+                        return api_response(500,{"status":"channel dictionary is missing one or more keys. should contain %s " % (channel_keys)})
 
-                ## check item 1 is a valid string less than 10 characters
-                if len(channel_map[channel][1]) > 10:
-                    return api_response(500,"Channel code must be less than 10 characters in length")
+                ## check promos is a list with 4 entries
+                if isinstance(channel_map[channel]['promos'],list) == False:
+                    return api_response(500,"promo key must contain a list of entries")
 
-                ## check item 2 is string (improve this)
-                if isinstance(channel_map[channel][2],str) == False:
-                    return api_response(500,"Region code doesnt look right")
-
-                ## check item 3 contains jpg in the url
-                if ".jpg" not in channel_map[channel][3]:
-                    return api_response(500,"Thumbnail URL is invalid or not pointing to a jpg file")
-
-                ## check item 4 contains m3u8 in the url
-                if ".m3u8" not in channel_map[channel][4]:
-                    return api_response(500,"HLS URL is invalid or not pointing to an HLS index file")
-
-                ## check item 5 is a list with 4 entries
-                if isinstance(channel_map[channel][5],list) == False:
-                    if len(channel_map[channel][5]) != 4:
+                ## Is list but not right amount of items
+                if isinstance(channel_map[channel]['promos'],list) == True:
+                    if len(channel_map[channel]['promos']) != 4:
                         return api_response(500,"Not submitted the right amount of promo URL's. Should be 4 in list format")
 
                 #### check item 5 list contains valid s3 links to mp4s
-                for item in channel_map[channel][5]:
+                for item in channel_map[channel]['promos']:
                     if "s3://" not in item.lower() or ".mp4" not in item.lower():
                         return api_response(500,"Promo S3 url is not valid. must be s3:// protocol and reference an MP4 file")
 
