@@ -376,6 +376,8 @@ Resources:
       Tags:
         - Key: DeploymentName
           Value: !Ref DeploymentName
+    DependsOn:
+      - FileMover
 
   ProxyPlusResourceCtrl:
     Type: AWS::ApiGateway::Resource
@@ -430,6 +432,7 @@ Resources:
       RestApiId: !Ref ApiGateway
     DependsOn:
       - ApiGateway
+      - MediaLiveControlConfig
 
   GetMethod:
     Type: AWS::ApiGateway::Method
@@ -457,6 +460,7 @@ Resources:
       RestApiId: !Ref ApiGateway
     DependsOn:
       - ApiGateway
+      - MediaLiveControlFunctions
 
   PutMethod:
     Type: AWS::ApiGateway::Method
@@ -484,6 +488,7 @@ Resources:
       RestApiId: !Ref ApiGateway
     DependsOn:
       - ApiGateway
+      - MediaLiveControlFunctions
 
   OptionsForCors:
     Type: AWS::ApiGateway::Method
