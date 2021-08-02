@@ -295,13 +295,6 @@ Resources:
                           content_type = "text/javascript"
                       elif ".json" in file_name:
                           content_type = "application/json"
-
-                          try:
-                            s3_data['control_api_endpoint_url'] = apiendpoint
-                            s3_data['promo_bucket_region'] = bucket
-                          except:
-                            LOGGER.info("ignore error, must be trying to modify wrong file")
-
                       elif ".zip" in file_name: # this is the zip
                           content_type = "application/zip"
                           s3_key = path + file_name
@@ -376,8 +369,6 @@ Resources:
       Tags:
         - Key: DeploymentName
           Value: !Ref DeploymentName
-    DependsOn:
-      - FileMover
 
   ProxyPlusResourceCtrl:
     Type: AWS::ApiGateway::Resource
@@ -432,7 +423,6 @@ Resources:
       RestApiId: !Ref ApiGateway
     DependsOn:
       - ApiGateway
-      - MediaLiveControlConfig
 
   GetMethod:
     Type: AWS::ApiGateway::Method
@@ -460,7 +450,6 @@ Resources:
       RestApiId: !Ref ApiGateway
     DependsOn:
       - ApiGateway
-      - MediaLiveControlFunctions
 
   PutMethod:
     Type: AWS::ApiGateway::Method
@@ -488,7 +477,6 @@ Resources:
       RestApiId: !Ref ApiGateway
     DependsOn:
       - ApiGateway
-      - MediaLiveControlFunctions
 
   OptionsForCors:
     Type: AWS::ApiGateway::Method
