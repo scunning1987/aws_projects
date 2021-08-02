@@ -87,9 +87,10 @@ def lambda_handler(event, context):
         response_body = {
             "statusCode":status_code,
             "headers":{
-                "Content-Type":"application/json"
+                "Content-Type":"application/json",
+                "Access-Control-Allow-Origin":"*"
             },
-            "body":json.dumps(message})
+            "body":json.dumps(message)
         }
         return response_body
     ### Function End : API Response structure ###
@@ -815,7 +816,8 @@ def lambda_handler(event, context):
     elif functiontorun == "describeChannelState":
         response = describeChannelState()
         return api_response(200,response)
-    else: # return error
+
+    else: # return error#
         response = {"error":"invalid functiontorun value sent to function"}
         return api_response(500,response)
 
