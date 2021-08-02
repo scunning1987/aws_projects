@@ -506,17 +506,22 @@ def lambda_handler(event, context):
                 batch_update("immediate", "", inputs, slate_path,channel_input_attachments)
 
                 ## start api
-                response = client.start_channel(ChannelId=channelid)
+                try:
+                    response = client.start_channel(ChannelId=channelid)
+                    return response
+                except Exception as e:
+                    return e
 
-                return response
         else: # input is stop
             if channel_status == "IDLE" or channel_status == "STOPPING":
                 return "Channel already stopping or stopped"
             else:
                 # stop api
-                response = client.stop_channel(ChannelId=channelid)
-
-                return response
+                try:
+                    response = client.stop_channel(ChannelId=channelid)
+                    return response
+                except Exception as e:
+                    return e
 
     def channelState():
         channellist = []
