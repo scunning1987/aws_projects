@@ -14,6 +14,13 @@ Parameters:
     Type: String
     AllowedPattern: ^arn:aws:iam::\d{12}:policy/:+
 
+## Conditions
+Conditions:
+  CustomPolicyAdder: !Not
+    - !Equals
+      - !Ref S3PolicyForMediaAccess
+      - ''
+
 ## Resources
 Resources:
   #################
@@ -39,6 +46,8 @@ Resources:
     Type: AWS::IAM::Role
     Properties:
       #RoleName: !Sub ${DeploymentName}
+      ManagedPolicyArns:
+        - ''
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
