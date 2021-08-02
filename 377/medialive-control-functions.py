@@ -26,6 +26,8 @@ def lambda_handler(event, context):
 
     print("INFO : Event Details - ",event)
 
+    event = event['queryStringParameters']
+
     # global vars:
     # maxresults, channelid, bucket, input/file, awsaccount, follow (actiontofollow), functiontorun
 
@@ -49,11 +51,6 @@ def lambda_handler(event, context):
     flow_destination = event['input']
     emxclient = boto3.client('mediaconnect',region_name=region)
 
-    zixi_cidr = os.environ['ZIXI_RECEIVER_CIDR']
-    zixi_remote_id = os.environ['ZIXI_REMOTE_ID']
-    zixi_stream_id = os.environ['ZIXI_STREAM_ID']
-    station_list = os.environ['STATION_LIST'].split(',')
-    zixi_ip = os.environ['ZIXI_IP']
     ###
 
     if ":" in event['bucket']:
@@ -83,6 +80,19 @@ def lambda_handler(event, context):
     # add the below vars inside the batch_update functions
     #   time = datetime.datetime.utcnow()
     #   timestring = time.strftime('%Y-%m-%dT%H%M%SZ')
+
+    ### Function Start : API Response structure ###
+    # API template response to API Gateway, for 200 or 500 responses
+    def api_response(status_code,message):
+        response_body = {
+            "statusCode":status_code,
+            "headers":{
+                "Content-Type":"application/json"
+            },
+            "body":json.dumps(message})
+        }
+        return response_body
+    ### Function End : API Response structure ###
 
     ### Function Start : list_inputs ###
     def list_inputs(type):
@@ -767,31 +777,45 @@ def lambda_handler(event, context):
 
 
     if functiontorun == "getSchedule":
-        return getSchedule()
+        response = getSchedule()
+        return api_response(200,response)
     elif functiontorun == "s3GetAssetList":
-        return s3GetAssetList()
+        response = s3GetAssetList()
+        return api_response(200,response)
     elif functiontorun == "followCurrent":
-        return followCurrent()
+        response = followCurrent()
+        return api_response(200,response)
     elif functiontorun == "followLast":
-        return followLast()
+        response = followLast()
+        return api_response(200,response)
     elif functiontorun == "followCustom":
-        return followCustom()
+        response = followCustom()
+        return api_response(200,response)
     elif functiontorun == 'immediateContinue':
-        return immediateContinue()
+        response = immediateContinue()
+        return api_response(200,response)
     elif functiontorun == "immediateSwitch":
-        return immediateSwitch()
+        response = immediateSwitch()
+        return api_response(200,response)
     elif functiontorun == "getAttachedInputs":
-        return getLiveInputs()
+        response = getLiveInputs()
+        return api_response(200,response)
     elif functiontorun == "immediateSwitchLive":
-        return immediateSwitchLive()
+        response = immediateSwitchLive()
+        return api_response(200,response)
     elif functiontorun == "scteInject":
-        return scteInject()
+        response = scteInject()
+        return api_response(200,response)
     elif functiontorun == "channelStartStop":
-        return channelStartStop()
+        response = channelStartStop()
+        return api_response(200,response)
     elif functiontorun == "channelState":
-        return channelState()
+        response = channelState()
+        return api_response(200,response)
     elif functiontorun == "describeChannelState":
-        return describeChannelState()
+        response = describeChannelState()
+        return api_response(200,response)
+    '''
     elif functiontorun == "startflow":
         print("INFO : Attempting to start flow - MyZixiFlow")
         print("INFO : Getting list of flows to see if MyZixiFlow exists...")
@@ -896,6 +920,8 @@ def lambda_handler(event, context):
         if flow_exists == 0:
             print("INFO : Flow doesnt exist")
             return {"flow_active":0,"flow_destination":""}
-
+    '''
     else: # return error
-        return "invalid functiontorun value sent to function"
+        response = {"error":"invalid functiontorun value sent to function"}
+        return api_response(500,response)
+
