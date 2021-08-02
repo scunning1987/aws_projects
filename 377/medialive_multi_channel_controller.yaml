@@ -236,6 +236,7 @@ Resources:
 
               # environment variables
               bucket = os.environ['BUCKET']
+              apiendpoint = os.environ['APIENDPOINT']
 
               # Manifest File containning URL's on github
               cloudformation_manifest = "https://raw.githubusercontent.com/scunning1987/aws_projects/main/377/manifest.txt"
@@ -294,6 +295,13 @@ Resources:
                           content_type = "text/javascript"
                       elif ".json" in file_name:
                           content_type = "application/json"
+
+                          try:
+                            s3_data['control_api_endpoint_url'] = apiendpoint
+                            s3_data['promo_bucket_region'] = bucket
+                          except:
+                            LOGGER.info("ignore error, must be trying to modify wrong file")
+
                       elif ".zip" in file_name: # this is the zip
                           content_type = "application/zip"
                           s3_key = path + file_name
@@ -347,7 +355,7 @@ Resources:
       Environment:
         Variables:
           BUCKET: !Ref S3Bucket
-          APIENDPOINT: !Sub https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${ApiStage}/dashboard-ctrl
+          APIENDPOINT: !Sub https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/v1/dashboard-ctrl
       Tags:
         - Key: DeploymentName
           Value: !Ref DeploymentName
