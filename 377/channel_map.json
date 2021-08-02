@@ -2,7 +2,7 @@
   "channel_map": {
     "1": {
       "primary_channel_id": 4856923,
-      "proxy_gen_channel": 123,
+      "proxy_gen_channel": 4856923,
       "channel_friendly_name": "MLS Channel 1",
       "channel_region": "us-west-2",
       "low_latency_url_source": "ws://34.212.225.202:8081/emx/20001",
@@ -16,7 +16,7 @@
     },
     "2": {
       "primary_channel_id": 1809084,
-      "proxy_gen_channel": 123,
+      "proxy_gen_channel": 1809084,
       "channel_friendly_name": "MotoX Channel 1",
       "channel_region": "us-west-2",
       "low_latency_url_source": "ws://34.212.225.202:8081/emx/20002",
