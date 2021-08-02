@@ -543,6 +543,29 @@ Resources:
     DependsOn:
       - ApiGateway
 
+  CloudfrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Origins:
+          - DomainName: !Sub ${S3Bucket}.s3.${AWS::Region}.amazonaws.com
+            Id: !Ref S3Bucket
+            S3OriginConfig:
+              OriginAccessIdentity: ""
+        DefaultCacheBehavior:
+          AllowedMethods:
+            - GET
+            - HEAD
+          TargetOriginId: !Ref S3Bucket
+          ViewerProtocolPolicy: redirect-to-https
+          MinTTL: 2
+          MaxTTL: 2
+      Tags:
+        - Key: StackName
+          Value: !Ref AWS::StackName
+
+
+
 
 #################################
 # Outputs
