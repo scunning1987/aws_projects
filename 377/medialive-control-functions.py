@@ -508,17 +508,6 @@ def lambda_handler(event, context):
                 ## start api
                 response = client.start_channel(ChannelId=channelid)
 
-                cw_client = boto3.client('events',region_name=region)
-                event_put_response = cw_client.put_events(
-                    Entries=[
-                        {
-                            "Source": "lambda.amazonaws.com",
-                            "DetailType": "MediaLive Channel State Change",
-                            "Detail": "{\"state\":\"STARTING\",\"channel_arn\":\"channel:" + channelid + "\"}"
-                        },
-                    ]
-                )
-                print("INFO : CW Event Put Response - ",event_put_response)
                 return response
         else: # input is stop
             if channel_status == "IDLE" or channel_status == "STOPPING":
@@ -527,18 +516,6 @@ def lambda_handler(event, context):
                 # stop api
                 response = client.stop_channel(ChannelId=channelid)
 
-                cw_client = boto3.client('events',region_name=region)
-                event_put_response = cw_client.put_events(
-                    Entries=[
-                        {
-                            "Source": "lambda.amazonaws.com",
-                            "DetailType": "MediaLive Channel State Change",
-                            "Detail": "{\"state\":\"STOPPING\",\"channel_arn\":\"channel:" + channelid + "\"}"
-                        },
-                    ]
-                )
-                print("INFO : CW Event Put Response - ",event_put_response)
-                #return channel_status
                 return response
 
     def channelState():
