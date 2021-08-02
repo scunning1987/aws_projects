@@ -367,10 +367,10 @@ function s3getObjectsAPI(bucket, apiendpointurl) {
         const data = JSON.parse(request.responseText);
         console.log("s3 get objects api call response: " + data)
         let option;
-        for (let i = 0; i < data.length; i++) {
+        for (let i = 0; i < data.body.length; i++) {
           option = document.createElement('option');
-          option.text = data[i].name;
-          option.value = data[i].key;
+          option.text = data.body[i].name;
+          option.value = data.body[i].key;
           dropdown.add(option);
         }
        } else {
@@ -422,10 +422,10 @@ function getLiveInputs(apiendpointurl) {
         const data = JSON.parse(request.responseText);
         console.log("get live inputs api call response : " + data)
         let option;
-        for (let i = 0; i < data.length; i++) {
+        for (let i = 0; i < data.body.length; i++) {
           option = document.createElement('option');
-          option.text = data[i].name;
-          option.value = data[i].name;
+          option.text = data.body[i].name;
+          option.value = data.body[i].name;
           dropdown.add(option);
         }
        } else {
