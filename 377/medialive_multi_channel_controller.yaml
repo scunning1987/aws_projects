@@ -3,11 +3,6 @@
 #### 
 ####
 ## Parameters - User Input
-Parameters:
-  DeploymentName:
-    Description: This is the name of the deployment
-    Type: String
-    MinLength: 1
 
   S3PolicyForMediaAccess:
     Description: Policy that gives Lambda access to customer managed S3 Bucket
