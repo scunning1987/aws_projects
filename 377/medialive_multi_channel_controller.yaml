@@ -292,7 +292,7 @@ Resources:
                           content_type = "text/css"
                       elif ".js" in file_name:
                           content_type = "text/javascript"
-                      elif "data.json" in file_name:
+                      elif ".json" in file_name:
                           content_type = "application/json"
                       elif ".zip" in file_name: # this is the zip
                           content_type = "application/zip"
@@ -347,6 +347,7 @@ Resources:
       Environment:
         Variables:
           BUCKET: !Ref S3Bucket
+          APIENDPOINT: !Sub https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${ApiStage}/dashboard-ctrl
       Tags:
         - Key: DeploymentName
           Value: !Ref DeploymentName
