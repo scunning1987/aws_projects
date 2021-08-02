@@ -3,7 +3,7 @@
 #### 
 ####
 ## Parameters - User Input
-
+Parameters:
   S3PolicyForMediaAccess:
     Description: Policy that gives Lambda access to customer managed S3 Bucket
     Type: String
