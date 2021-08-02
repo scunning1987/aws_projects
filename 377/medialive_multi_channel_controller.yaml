@@ -9,6 +9,11 @@ Parameters:
     Type: String
     MinLength: 1
 
+  S3PolicyForMediaAccess:
+    Description: Policy that gives Lambda access to customer managed S3 Bucket
+    Type: String
+    AllowedPattern: ^arn:aws:iam::\d{12}:policy/:+
+
 ## Resources
 Resources:
   #################
@@ -23,8 +28,8 @@ Resources:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: AES256
       Tags:
-        - Key: DeploymentName
-          Value: !Ref DeploymentName
+        - Key: StackName
+          Value: !Ref AWS::StackName
 
   #################
   ## IAM & Permissions
@@ -44,8 +49,8 @@ Resources:
             Action:
               - sts:AssumeRole
       Tags:
-        - Key: DeploymentName
-          Value: !Ref DeploymentName
+        - Key: StackName
+          Value: !Ref AWS::StackName
 
   ## IAM Policy
   S3AccessPolicy:
@@ -53,7 +58,7 @@ Resources:
     Properties:
       Roles:
         - !Ref LambdaRole
-      PolicyName: !Sub ${DeploymentName}-s3-access
+      PolicyName: !Sub ${AWS::StackName}-s3-access
       PolicyDocument:
         Statement:
           - Effect: Allow
@@ -134,8 +139,8 @@ Resources:
         S3Bucket: !Ref S3Bucket
         S3Key: !GetAtt FileMover.medialive-control-functions
       Tags:
-        - Key: DeploymentName
-          Value: !Ref DeploymentName
+        - Key: StackName
+          Value: !Ref AWS::StackName
     DependsOn:
       - S3Bucket
       - LambdaRole
@@ -161,8 +166,8 @@ Resources:
           CONFIG_KEY: !GetAtt FileMover.channel_map
           TEMPLATE_KEY: !GetAtt FileMover.channel_map_template
       Tags:
-        - Key: DeploymentName
-          Value: !Ref DeploymentName
+        - Key: StackName
+          Value: !Ref AWS::StackName
     DependsOn:
       - S3Bucket
       - LambdaRole
@@ -350,8 +355,8 @@ Resources:
           BUCKET: !Ref S3Bucket
           APIENDPOINT: !Sub https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/v1/dashboard-ctrl
       Tags:
-        - Key: DeploymentName
-          Value: !Ref DeploymentName
+        - Key: StackName
+          Value: !Ref AWS::StackName
     DependsOn:
       - S3Bucket
       - LambdaRole
@@ -364,11 +369,11 @@ Resources:
   ApiGateway:
     Type: AWS::ApiGateway::RestApi
     Properties:
-      Name: !Sub ${DeploymentName}-emlctrl-api-handler
-      Description: !Sub API Handler [${DeploymentName}]
+      Name: !Sub ${AWS::StackName}-emlctrl-api-handler
+      Description: !Sub API Handler [${AWS::StackName}]
       Tags:
-        - Key: DeploymentName
-          Value: !Ref DeploymentName
+        - Key: StackName
+          Value: !Ref AWS::StackName
 
   ProxyPlusResourceCtrl:
     Type: AWS::ApiGateway::Resource
