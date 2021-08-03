@@ -583,6 +583,7 @@ Resources:
     Type: AWS::CloudFront::Distribution
     Properties:
       DistributionConfig:
+        Comment: !Sub Distribution for stack ${AWS::StackName}
         Enabled: True
         HttpVersion: http2
         Origins:
