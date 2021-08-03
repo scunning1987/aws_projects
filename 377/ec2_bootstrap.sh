@@ -3,6 +3,6 @@ sudo bash -c 'echo -e "[nimble]\nname= Nimble Streamer repository\nbaseurl=http:
 sudo yum -y makecache
 sudo yum -y install nimble
 sudo yum -y install wget
-sudo wget
+sudo wget https://raw.githubusercontent.com/scunning1987/aws_projects/main/377/ec2_stream_builder.py
 sudo python ~/ec2_stream_builder.py 40 20001
 sudo service nimble start

@@ -244,3 +244,6 @@ LOGGER.info(template_rules_conf_json)
 
 # write new json to nimble streamer location
 # /etc/nimble/rules.conf
+file = open("/etc/nimble/rules.conf")
+file.write(template_rules_conf_json)
+file.close()
