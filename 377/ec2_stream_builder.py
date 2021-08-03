@@ -2,13 +2,34 @@ import json
 import sys
 import logging
 
-LOGGER = logging.getLogger()
+# Create Logging Handler
+LOGGER = logging.getLogger('Stream Builder')
 LOGGER.setLevel(logging.INFO)
+
+# Create File Handler For Logging
+fh = logging.FileHandler('mpeg2-corrector.log') ## Un-comment this line when doing console testing
+fh.setLevel(logging.DEBUG) ## Un-comment this line when doing console testing
+
+# Create Console Handler
+ch = logging.StreamHandler()
+ch.setLevel(logging.INFO)
+
+# create formatter and add it to the handlers
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+fh.setFormatter(formatter) #### Un-comment this line when doing console testing
+ch.setFormatter(formatter)
+
+# add the handlers to the logger
+LOGGER.addHandler(fh) #### Un-comment this line when doing console testing
+LOGGER.addHandler(ch)
+
+udp_start_emx = 0
+channel_count = 0
 
 # Try incoming arguments or default to 50 and ports starting at 20001
 try:
-    channel_count = sys.argv[1]
-    LOGGER.info("Channels to configure streamer for : %s " str(channel_count))
+    channel_count = int(sys.argv[1])
+    LOGGER.info("Channels to configure streamer for : %s " % (str(channel_count)))
     if int(sys.argv[1]) > 100:
         LOGGER.warning("Streamer supports max of 100 streams, defaulting to 100")
         channel_count = 100
@@ -37,8 +58,8 @@ stream_source = [ "emx" , "eml" ]
 template_rules_conf_json = {
     "SyncResponse": {
         "status": "success",
-        "StreamCheckerMode": false,
-        "UniqueVisitors": false,
+        "StreamCheckerMode": "false",
+        "UniqueVisitors": "false",
         "RoutesHash": "",
         "Routes": [],
         "IpRanges": [],
@@ -176,6 +197,7 @@ template_rules_conf_json = {
     }
 }
 
+LOGGER.info("Beginning Camera and Streamer building...")
 # Replace App Name
 template_rules_conf_json['SyncResponse']['RtmpSettings']['apps'][0]['app'] = live_stream_app_name
 
@@ -217,4 +239,8 @@ for channel_number in range(0,channel_count):
 template_rules_conf_json['SyncResponse']['Cameras'] = cameras_list
 template_rules_conf_json['SyncResponse']['Streams'] = streams_list
 
-print(template_rules_conf_json)
+LOGGER.info("Constructed New JSON")
+LOGGER.info(template_rules_conf_json)
+
+# write new json to nimble streamer location
+# /etc/nimble/rules.conf
