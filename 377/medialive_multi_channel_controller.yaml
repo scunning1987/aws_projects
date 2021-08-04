@@ -463,6 +463,9 @@ Resources:
               s3_key = os.environ['CONFIG_KEY']
               api_ctrl = os.environ['APICTRL']
 
+              LOGGER.info("Environment Variable : S3 Bucket : %s " % (bucket))
+              LOGGER.info("Environment Variable : S3 Key : %s " % (s3_key))
+              LOGGER.info("Environment Variable : API Ctrl : %s " % (api_ctrl))
 
               # "RequestType": "Create"
               if event['RequestType'] == "Create" or event['RequestType'] == "Update":
@@ -471,7 +474,6 @@ Resources:
                   try:
                       s3_response = s3.get_object(Bucket=bucket, Key=s3_key)
                       LOGGER.info("Got object from S3")
-                      responseData[file_base_name] = s3_key
                   except Exception as e:
                       LOGGER.error("Unable to get object from S3, got exception: %s" % (e))
                       responseData['Status'] = "Unable to get object from S3, got exception: %s" % (e)
@@ -479,7 +481,6 @@ Resources:
                       raise Exception("Unable to get object from S3, got exception: %s" % (e))
 
                   # Edit json with deployment information
-                  s3_response = s3.put_object(Body=s3_data, Bucket=bucket, Key=s3_key,ContentType=content_type, CacheControl='no-cache')
                   s3_response['control_api_endpoint_url'] = api_ctrl
 
                   content_type = "application/json"
@@ -488,8 +489,8 @@ Resources:
                   LOGGER.info("Now putting Channel map json back to S3")
                   try:
                       s3_response = s3.put_object(Body=s3_response, Bucket=bucket, Key=s3_key,ContentType=content_type, CacheControl='no-cache')
-                      LOGGER.info("Got object from S3")
-                      responseData[file_base_name] = s3_key
+                      LOGGER.info("Put object to S3")
+                      responseData['copy'] = s3_key
                   except Exception as e:
                       LOGGER.error("Unable to get object from S3, got exception: %s" % (e))
                       responseData['Status'] = "Unable to get object from S3, got exception: %s" % (e)
