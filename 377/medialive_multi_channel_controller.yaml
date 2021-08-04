@@ -145,6 +145,18 @@ Resources:
       - S3Bucket
       - LambdaRole
 
+  ChannelMapUpdater:
+    Type: Custom::LambdaInvokerToUpdateConfig
+    Properties:
+      ServiceToken: !GetAtt ChannelMapUpdaterFunction.Arn
+      Region: !Ref 'AWS::Region'
+      Bucket: !Ref S3Bucket
+      Config_Key: !GetAtt FileMover.channel_map
+      Api_Ctrl: !Sub https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${ApiStage}/dashboard-ctrl
+    DependsOn:
+      - CloudFrontDistribution
+      - ApiGateway
+
   #################
   ## Lambda
   #################
@@ -384,6 +396,126 @@ Resources:
       - S3Bucket
       - LambdaRole
       - S3AccessPolicy
+
+  ChannelMapUpdaterFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Channel configuration API handler
+      Role: !GetAtt LambdaRole.Arn
+      Runtime: python3.8
+      Handler: index.lambda_handler
+      Timeout: 10
+      MemorySize: 10240
+      Code:
+        ZipFile: |
+          '''
+          Copyright (c) 2021 Scott Cunningham
+
+          Permission is hereby granted, free of charge, to any person obtaining a copy
+          of this software and associated documentation files (the "Software"), to deal
+          in the Software without restriction, including without limitation the rights
+          to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+          copies of the Software, and to permit persons to whom the Software is
+          furnished to do so, subject to the following conditions:
+
+          The above copyright notice and this permission notice shall be included in all
+          copies or substantial portions of the Software.
+
+          THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+          IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+          FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+          AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+          LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+          OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+          SOFTWARE.
+
+          Summary: This script is a custom resource to place the HTML pages and Lambda code into the destination bucket.
+
+          Original Author: Scott Cunningham
+          '''
+
+          import json
+          import logging
+          import boto3
+          import os
+          import urllib3
+          from urllib.parse import urlparse
+          from zipfile import ZipFile
+          import cfnresponse
+
+          LOGGER = logging.getLogger()
+          LOGGER.setLevel(logging.INFO)
+          MANIFESTMODIFY="True"
+
+          def lambda_handler(event, context):
+
+              ## Log the incoming event
+              LOGGER.info("Event : %s " % (event))
+
+              ## Create Response Data Dictionary for the CloudFormationn response
+              responseData = dict()
+
+              ## Initialize S3 boto3 client
+              s3 = boto3.client('s3')
+
+              # environment variables
+              bucket = os.environ['BUCKET']
+              s3_key = os.environ['CONFIG_KEY']
+              api_ctrl = os.environ['APICTRL']
+
+
+              # "RequestType": "Create"
+              if event['RequestType'] == "Create" or event['RequestType'] == "Update":
+                  # Get Channel Map JSON from S3
+                  LOGGER.info("Now getting Channel map json from S3")
+                  try:
+                      s3_response = s3.get_object(Bucket=bucket, Key=s3_key)
+                      LOGGER.info("Got object from S3")
+                      responseData[file_base_name] = s3_key
+                  except Exception as e:
+                      LOGGER.error("Unable to get object from S3, got exception: %s" % (e))
+                      responseData['Status'] = "Unable to get object from S3, got exception: %s" % (e)
+                      cfnresponse.send(event, context, "FAILED",responseData)
+                      raise Exception("Unable to get object from S3, got exception: %s" % (e))
+
+                  # Edit json with deployment information
+                  s3_response = s3.put_object(Body=s3_data, Bucket=bucket, Key=s3_key,ContentType=content_type, CacheControl='no-cache')
+                  s3_response['control_api_endpoint_url'] = api_ctrl
+
+                  content_type = "application/json"
+
+                  # Put S3 Object back to bucket with changes
+                  LOGGER.info("Now putting Channel map json back to S3")
+                  try:
+                      s3_response = s3.put_object(Body=s3_response, Bucket=bucket, Key=s3_key,ContentType=content_type, CacheControl='no-cache')
+                      LOGGER.info("Got object from S3")
+                      responseData[file_base_name] = s3_key
+                  except Exception as e:
+                      LOGGER.error("Unable to get object from S3, got exception: %s" % (e))
+                      responseData['Status'] = "Unable to get object from S3, got exception: %s" % (e)
+                      cfnresponse.send(event, context, "FAILED",responseData)
+                      raise Exception("Unable to get object from S3, got exception: %s" % (e))
+
+              else: # DELETE
+                  LOGGER.info("Nothing to do when DELETE stack command is used")
+
+
+              responseData['Status'] = "SUCCESS"
+              cfnresponse.send(event, context, "SUCCESS",responseData)
+              return responseData
+
+      Environment:
+        Variables:
+          BUCKET: !Ref S3Bucket
+          CONFIG_KEY: !GetAtt FileMover.channel_map
+          APICTRL: !Sub https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${ApiStage}/dashboard-ctrl
+      Tags:
+        - Key: StackName
+          Value: !Ref AWS::StackName
+    DependsOn:
+      - CloudFrontDistribution
+      - ApiGateway
+
 
 
     #################
