@@ -10,6 +10,19 @@ Parameters:
     AllowedPattern: ^arn:aws:iam::.+ #(\d{12}|aws):policy/:+
     Default: arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
 
+  SubnetToDeployApiInterface:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: Subnet(s) to deploy API Gateway Interface endpoint
+
+  VpcToDeployInto:
+    Type: AWS::EC2::VPC::Id
+    Description: VPC Identifier
+
+  InterfaceEndpointSecurityGroups:
+    Type: List<AWS::EC2::SecurityGroup::Id>
+    Description: Select one or more security groups to apply to the API Gateway Interface endpoint
+
+
 ## Resources
 Resources:
   #################
@@ -27,7 +40,6 @@ Resources:
         - Key: StackName
           Value: !Ref AWS::StackName
 
-  #
   S3BucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
@@ -51,7 +63,6 @@ Resources:
     DependsOn:
       - S3Bucket
       - CloudFrontOAI
-
 
   #################
   ## IAM & Permissions
@@ -154,7 +165,6 @@ Resources:
       Config_Key: !GetAtt FileMover.channel_map
       Api_Ctrl: !Sub https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${ApiStage}/dashboard-ctrl
     DependsOn:
-      - CloudFrontDistribution
       - ApiGateway
 
   #################
@@ -518,9 +528,21 @@ Resources:
         - Key: StackName
           Value: !Ref AWS::StackName
     DependsOn:
-      - CloudFrontDistribution
       - ApiGateway
 
+    #################
+    ## EC2
+    #################
+
+  VPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      ServiceName: !Sub com.amazonaws.${AWS::Region}.execute-api
+      PrivateDnsEnabled: true
+      SubnetIds: !Ref SubnetToDeployApiInterface
+      VpcId: !Ref VpcToDeployInto
+      VpcEndpointType : Interface
+      SecurityGroupIds: !Ref InterfaceEndpointSecurityGroups
 
 
     #################
@@ -531,6 +553,36 @@ Resources:
     Properties:
       Name: !Sub ${AWS::StackName}-emlctrl-api-handler
       Description: !Sub API Handler [${AWS::StackName}]
+      EndpointConfiguration:
+        Types:
+          - PRIVATE
+        VpcEndpointIds:
+          - !Ref VPCEndpoint
+      Policy: !Sub
+        |-
+        {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Principal": "*",
+                    "Action": "execute-api:Invoke",
+                    "Resource": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:*/*"
+                },
+                {
+                    "Effect": "Deny",
+                    "Principal": "*",
+                    "Action": "execute-api:Invoke",
+                    "Resource": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:*/*",
+                    "Condition": {
+                        "StringNotEquals": {
+                            "aws:SourceVpc": "${VpcToDeployInto}"
+                        }
+                    }
+                }
+            ]
+        }
+
       Tags:
         - Key: StackName
           Value: !Ref AWS::StackName
@@ -744,6 +796,7 @@ Resources:
           Value: !Ref AWS::StackName
     DependsOn:
       - CloudFrontOAI
+
 
 #################################
 # Outputs

@@ -14,5 +14,6 @@ sudo echo "ssl_port = 443" >> /etc/nimble/nimble.conf
 sudo echo "ssl_certificate = /etc/ssl/private/streamer.cert" >> /etc/nimble/nimble.conf
 sudo echo "ssl_certificate_key = /etc/ssl/private/streamer.key" >> /etc/nimble/nimble.conf
 sudo echo "ssl_protocols = TLSv1 TLSv1.1 TLSv1.2" >> /etc/nimble/nimble.conf
+sudo sed -i 's/port\ =\ 8081/port\ =\ 80/g' /etc/nimble/nimble.conf
 sudo chown -R nimble:nimble /etc/ssl/private
 sudo service nimble start
