@@ -39,7 +39,7 @@ except:
     channel_count = 50
 
 try:
-    udp_start_emx = sys.argv[2]
+    udp_start_emx = int(sys.argv[2])
     LOGGER.info("Starting port number in range: %s , please make sure your EC2 security groups are set accordingly" % (str(udp_start_emx)))
     if int(udp_start_emx) < 5000:
         LOGGER.warning("Starting port set too low, defaulting to 20001")
@@ -244,6 +244,6 @@ LOGGER.info(template_rules_conf_json)
 
 # write new json to nimble streamer location
 # /etc/nimble/rules.conf
-file = open("/etc/nimble/rules.conf")
-file.write(template_rules_conf_json,"w")
+file = open("/etc/nimble/rules.conf","w")
+file.write(json.dumps(template_rules_conf_json))
 file.close()
