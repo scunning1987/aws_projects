@@ -178,7 +178,9 @@ function channelDropdownPopulate(){
 }
 
 var sldpPlayers = [];
-document.getElementById("channel_selector").onclick = function () {
+
+//document.getElementById("channel_selector").onclick = function () {
+document.getElementById("channel_selector").addEventListener('change', (event) => {
 
   // log selected channel number and set to pipSelector variable
   pipSelector = document.getElementById("channel_selector").value
@@ -259,7 +261,7 @@ document.getElementById("channel_selector").onclick = function () {
       console.log("done initializing low latency players.")
       }
   startPlayers()
-}
+});
 
 
 
