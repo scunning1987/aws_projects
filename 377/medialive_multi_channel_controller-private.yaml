@@ -496,6 +496,8 @@ Resources:
                   # Edit json with deployment information
                   s3_data = json.loads(s3_response['Body'].read())
                   s3_data['control_api_endpoint_url'] = api_ctrl
+                  api_endpoint_parse = urlparse(api_ctrl)
+                  s3_data['control_api_endpoint_host_header'] = api_endpoint_parse.netloc
 
                   content_type = "application/json"
 
