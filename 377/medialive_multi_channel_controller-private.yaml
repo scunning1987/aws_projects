@@ -186,6 +186,8 @@ Resources:
       Tags:
         - Key: StackName
           Value: !Ref AWS::StackName
+        - Key: Version
+          Value: 2
     DependsOn:
       - S3Bucket
       - LambdaRole
@@ -213,6 +215,8 @@ Resources:
       Tags:
         - Key: StackName
           Value: !Ref AWS::StackName
+        - Key: Version
+          Value: 2
     DependsOn:
       - S3Bucket
       - LambdaRole
@@ -402,6 +406,8 @@ Resources:
       Tags:
         - Key: StackName
           Value: !Ref AWS::StackName
+        - Key: Version
+          Value: 2
     DependsOn:
       - S3Bucket
       - LambdaRole
@@ -529,6 +535,8 @@ Resources:
       Tags:
         - Key: StackName
           Value: !Ref AWS::StackName
+        - Key: Version
+          Value: 2
     DependsOn:
       - ApiGateway
 
