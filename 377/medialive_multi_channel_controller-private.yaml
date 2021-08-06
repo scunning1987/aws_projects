@@ -231,7 +231,7 @@ Resources:
       Role: !GetAtt LambdaRole.Arn
       Runtime: python3.8
       Handler: index.lambda_handler
-      Timeout: 30
+      Timeout: 35
       MemorySize: 10240
       Code:
         ZipFile: |
@@ -273,6 +273,8 @@ Resources:
           LOGGER = logging.getLogger()
           LOGGER.setLevel(logging.INFO)
           MANIFESTMODIFY="True"
+
+          version = 2
 
           def lambda_handler(event, context):
 
