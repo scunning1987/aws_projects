@@ -157,8 +157,8 @@ def lambda_handler(event, context):
         # content_type = application/json
         # cache_control = 0
         try:
-            put_response = s3.put_object(Bucket=bucket,Body=json.dumps(body_json),Key=channel_config_key,CacheControl='no-cache',ContentType='application/json')
-            return api_response(200,{"Status":"New config loaded successfully."})
+            s3.put_object(Bucket=bucket,Body=json.dumps(body_json),Key=channel_config_key,CacheControl='no-cache',ContentType='application/json')
+            return api_response(200,{"Status":"New config loaded successfully"})
         except Exception as e:
             return api_response(500,{"Status":"Unable to publish new config to S3, please try again. If the problem persists, please reach out to support"})
     else:
