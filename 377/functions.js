@@ -11,6 +11,7 @@ function getConfig(){
 
   var request = new XMLHttpRequest();
   request.open('GET', json_endpoint, false);
+  request.setRequestHeader("Host",window.apiendpointhost)
 
   request.onload = function() {
 
@@ -23,6 +24,7 @@ function getConfig(){
     window.bucket = jdata.vod_bucket
     window.promo_bucket_region = jdata.promo_bucket_region
     window.apiendpointurl = jdata.control_api_endpoint_url
+    window.apiendpointhost = jdata.control_api_endpoint_host_header
     json_data = request.responseText
      } else {
     // Reached the server, but it returned an error
@@ -321,6 +323,7 @@ function channelState() {
 
     var request = new XMLHttpRequest();
     request.open('GET', url, true);
+    request.setRequestHeader("Host",window.apiendpointhost)
 
     request.onload = function() {
       if (request.status === 200) {
@@ -363,6 +366,7 @@ function s3getObjectsAPI(bucket, apiendpointurl) {
 
     var request = new XMLHttpRequest();
     request.open('GET', url, true);
+    request.setRequestHeader("Host",window.apiendpointhost)
 
     request.onload = function() {
       if (request.status === 200) {
@@ -418,6 +422,7 @@ function getLiveInputs(apiendpointurl) {
 
     var request = new XMLHttpRequest();
     request.open('GET', url, true);
+    request.setRequestHeader("Host",window.apiendpointhost)
 
     request.onload = function() {
       if (request.status === 200) {
@@ -462,6 +467,7 @@ function emlSwitchAction(file, channelid, bucket, takeType, follow, maxresults, 
 
     var putReq = new XMLHttpRequest();
     putReq.open("PUT", url, false);
+    putReq.setRequestHeader("Host",window.apiendpointhost)
     putReq.setRequestHeader("Accept","*/*");
     putReq.send();
 }
@@ -502,6 +508,7 @@ function channelStartStop(startstop){
 
         var putReq = new XMLHttpRequest();
         putReq.open("PUT", url, false);
+        putReq.setRequestHeader("Host",window.apiendpointhost)
         putReq.setRequestHeader("Accept","*/*");
         putReq.send();
 
