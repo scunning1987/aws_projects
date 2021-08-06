@@ -39,6 +39,8 @@ Resources:
       Tags:
         - Key: StackName
           Value: !Ref AWS::StackName
+        - Key: Version
+          Value: 2
 
   S3BucketPolicy:
     Type: AWS::S3::BucketPolicy
@@ -409,7 +411,7 @@ Resources:
         - Key: StackName
           Value: !Ref AWS::StackName
         - Key: Version
-          Value: 2
+          Value: 3
     DependsOn:
       - S3Bucket
       - LambdaRole
