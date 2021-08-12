@@ -30,9 +30,9 @@
     }
   },
   "vod_bucket":"schedule-action-assets",
-  "channel_start_slate":"s3://cunsco-east/INTRO.mp4",
+  "channel_start_slate":"",
   "promo_bucket_region": "us-west-2",
   "control_api_endpoint_url": "https://69s54i4koc.execute-api.us-west-2.amazonaws.com/v1/dashboard-ctrl",
-  "control_api_endpoint_host_header":"69s54i4koc.execute-api.us-west-2.amazonaws.com",
+  "control_api_endpoint_host_header":"",
   "dashboard_title":"My Streaming Dashboard"
 }
