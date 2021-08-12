@@ -4,24 +4,24 @@
 ####
 ## Parameters - User Input
 Parameters:
-  S3PolicyForMediaAccess:
-    Description: Policy that gives Lambda access to customer managed S3 Bucket
-    Type: String
-    AllowedPattern: ^arn:aws:iam::.+ #(\d{12}|aws):policy/:+
-    Default: arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
-
-  SubnetToDeployApiInterface:
-    Type: List<AWS::EC2::Subnet::Id>
-    Description: Subnet(s) to deploy API Gateway Interface endpoint
 
   VpcToDeployInto:
     Type: AWS::EC2::VPC::Id
     Description: VPC Identifier
 
+  SubnetToDeployApiInterface:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: Subnet(s) to deploy API Gateway Interface endpoint
+
   InterfaceEndpointSecurityGroups:
     Type: List<AWS::EC2::SecurityGroup::Id>
     Description: Select one or more security groups to apply to the API Gateway Interface endpoint
 
+  S3PolicyForMediaAccess:
+    Description: Policy that gives Lambda access to customer managed S3 Bucket
+    Type: String
+    AllowedPattern: ^arn:aws:iam::.+ #(\d{12}|aws):policy/:+
+    Default: arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
 
 ## Resources
 Resources:
@@ -831,7 +831,7 @@ Outputs:
     Description: Dashboard URL for MediaLive control
     #Value: !Sub https://${S3Bucket}.s3.${AWS::Region}.amazonaws.com/${FileMover.ui}
     #Value: !Sub https://${CloudFrontDistribution.DomainName}/${FileMover.ui}
-    Value: !Sub https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${ApiStage}/dashboard/${S3Bucket}/${FileMover.ui}
+    Value: !Sub https://${ApiGateway}-${VPCEndpoint}.execute-api.${AWS::Region}.amazonaws.com/${ApiStage}/dashboard/${S3Bucket}/${FileMover.ui}
 
   APIEndpointURLGetSample:
     Description: API Endpoint for getting sample configuration, method - GET
