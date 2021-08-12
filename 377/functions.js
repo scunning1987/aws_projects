@@ -136,14 +136,14 @@ function chpromoins(promo_number){
     promo_to_play = live_event_map[pipSelector].promos[promo_number-1]
     console.log("Sending an API call to MediaLive to start promo : " + promo_to_play)
     s3_url = new URL(promo_to_play.replace("s3://","https://"))
-    bucket = s3_url.hostname
+    promo_bucket = s3_url.hostname
     input = s3_url.pathname.replace(/^\/+/, '')
-    console.log("Promo bucket : " + bucket)
+    console.log("Promo bucket : " + promo_bucket)
     console.log("Promo key : " + input)
 
     channelid = live_event_map[pipSelector].primary_channel_id + ":" + live_event_map[pipSelector].channel_region
     console.log("Submitting API Call to insert promo now")
-    emlSwitchAction(input, channelid, bucket, "immediateContinue", "", 200, "master", "")
+    emlSwitchAction(input, channelid, promo_bucket, "immediateContinue", "", 200, "master", "")
     }
     // reset styling on the pip now that the action has been performed
     fadeAway('promo'+promo_number);
