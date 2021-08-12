@@ -25,6 +25,7 @@
     <div id="controls_body">
         <div id="channel_selector_wrapper"><h3>Operator Channel Selection : </h3><select id="channel_selector" name="channel_select"></select></div>
         <div id="channel_status"><h3>Channel Status:</br> </h3></div>
+        <div id="clock"></div>
         <div id="channel_control" class="common">
             <div id="menu_tabs" class="tab">
                 <button class="tablinks" onclick="mediaLiveControl(event,'chstartstop')">Start/Stop</button>
@@ -55,6 +56,10 @@
             <div id="promoctrl" class="tabcontent">
                 <h3>Promo Insert</h3>
                 <p>Control functions to insert promo video then return to Live Stream</p>
+                <button class="control_buttons promo" id="prepare1" onclick="chpromoprep(1)">Prepare 1</button>
+                <button class="control_buttons promo" id="prepare2" onclick="chpromoprep(2)">Prepare 2</button>
+                <button class="control_buttons promo" id="prepare3" onclick="chpromoprep(3)">Prepare 3</button>
+                <button class="control_buttons promo" id="prepare4" onclick="chpromoprep(4)">Prepare 4</button>
                 <button class="control_buttons promo" id="promo1" onclick="chpromoins(1)">Promo 1</button>
                 <button class="control_buttons promo" id="promo2" onclick="chpromoins(2)">Promo 2</button>
                 <button class="control_buttons promo" id="promo3" onclick="chpromoins(3)">Promo 3</button>
@@ -64,7 +69,7 @@
         <div id="selected_channel_info" class="common">
             <div id="channel_info_header" class="tabs tablinks">Channel Information</div>
 
-          <div id="channel_info"><p> </p></div>
+            <div id="channel_info"><p> </p></div>
 
         </div>
     </div>

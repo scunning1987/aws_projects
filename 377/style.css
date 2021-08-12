@@ -53,6 +53,7 @@ td{
   display:inline-block;
   float:left;
   height:80px;
+  width:400px;
 }
 
 #channels_body{
@@ -116,6 +117,17 @@ td{
   height: 360px;
   margin-top:20px;
 }
+#clock {
+    text-align: center;
+    font-size: 12px;
+    font-family: Verdana;
+    height:80px;
+    display:inline-block;
+    margin-top:20px;
+    position:relative;
+    right:0px;
+ }
+
 /* Style the tab */
 .tab {
   overflow: hidden;
@@ -160,12 +172,17 @@ td{
 .control_buttons {
   background-color: inherit;
   float: left;
+  width:100px;
+  margin-bottom:10px;
   outline: none;
   cursor: pointer;
-  padding: 20px 20px;
+  padding: 10px 20px;
   transition: 0.3s;
   font-size: 17px;
   border: 1px solid #ccc;
+}
+#prepare4 {
+  margin-right:80px;
 }
 #stop {
   margin-left:10px;

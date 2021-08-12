@@ -210,7 +210,7 @@ def lambda_handler(event, context):
         actionname = inputfile.rsplit('/', 1)[-1][0:30] + "_" + str(random.randint(100,999)) + "_" + timestring
         inputurl = bucket + "/" + str(inputfile)
 
-        if type == "immediate-continue":
+        if type == "immediate-continue" or type == "input-prepare":
             # Find a CONTINUE dynamic file (For promo / play once functionality)
             for input in input_attachments:
                 if input['InputSettings']['SourceEndBehavior'] == "CONTINUE" and input['InputAttachmentName'] in inputs['file']:
@@ -308,6 +308,37 @@ def lambda_handler(event, context):
             )
             return response
 
+        elif type == "input-prepare":
+            try:
+                response = client.batch_update_schedule(
+                    ChannelId=channelid,
+                    Creates={
+                        'ScheduleActions': [
+                            {
+                                'ActionName': actionname,
+                                'ScheduleActionSettings': {
+                                    'InputPrepareSettings': {
+                                        'InputAttachmentNameReference': inputattachref,
+                                        'UrlPath': [
+                                            inputurl #,inputurl
+                                        ]
+                                    },
+                                },
+                                'ScheduleActionStartSettings': {
+                                    'ImmediateModeScheduleActionStartSettings': {}
+
+                                }
+                            },
+                        ]
+                    }
+                )
+                print(json.dumps(response))
+            except Exception as e:
+                print("Error creating Schedule Action")
+                print(e)
+            return response
+
+
         else: # this assumes the type is now LIVE immediate
             try:
                 response = client.batch_update_schedule(
@@ -397,16 +428,26 @@ def lambda_handler(event, context):
     def immediateSwitch():
         inputs = list_inputs("dictionary") # return dictionary : file, live, livelist
         channel_info = describe_channel()
-        currentaction = channel_info['PipelineDetails'][0]['ActiveInputSwitchActionName'] # return string of current running action
-        itemstoreplace = describe_schedule(inputs, currentaction, "true") # return dictionary : *itemstoreschedule*, itemstodelete, dashboardlist, lastaction
+        #currentaction = channel_info['PipelineDetails'][0]['ActiveInputSwitchActionName'] # return string of current running action
+        #itemstoreplace = describe_schedule(inputs, currentaction, "true") # return dictionary : *itemstoreschedule*, itemstodelete, dashboardlist, lastaction
         channel_input_attachments = channel_info['InputAttachments']
 
-        batch_update("immediate", "", inputs, inputkey,channel_input_attachments)
+        response = batch_update("immediate", "", inputs, inputkey,channel_input_attachments)
 
+        '''
         for item in itemstoreplace['itemstoreschedule']:
             lastaction = describe_schedule(inputs, currentaction, "false") # return dictionary : itemstoreschedule, itemstodelete, dashboardlist, *lastaction*
             batch_update("follow", lastaction['lastaction'], inputs, item,channel_input_attachments)
         return itemstoreplace
+        '''
+        return response
+
+    def inputPrepare():
+        inputs = list_inputs("dictionary") # return dictionary : file, live, livelist
+        channel_info = describe_channel()
+        channel_input_attachments = channel_info['InputAttachments']
+        response = batch_update("input-prepare", "", inputs, inputkey,channel_input_attachments)
+        return response
 
     def immediateSwitchLive():
         inputs = list_inputs("dictionary") # return dictionary : file, live, livelist
@@ -424,7 +465,7 @@ def lambda_handler(event, context):
         channel_input_attachments = channel_info['InputAttachments']
 
         # immediate injection of the file to play once
-        batch_update("immediate-continue", "", inputs, input,channel_input_attachments)
+        slate_response = batch_update("immediate-continue", "", inputs, input,channel_input_attachments)
 
         # follow last
         lastaction = describe_schedule(inputs, "followlast", "true") #
@@ -435,7 +476,7 @@ def lambda_handler(event, context):
                 inputkey = live_input['name']
 
         response = batch_update("follow-live", lastaction['lastaction'], inputs, inputkey,channel_input_attachments)
-        return response
+        return slate_response
 
     def followLast():
         inputs = list_inputs("dictionary") # return dictionary : file, live, livelist
@@ -503,10 +544,12 @@ def lambda_handler(event, context):
                 slate_path = event['bucket'].split(":")[1].replace("%2F","/")
                 inputs = list_inputs("dictionary") # return dictionary : file, live, livelist
 
+                '''
                 try:
                     batch_update("immediate", "", inputs, slate_path,channel_input_attachments)
                 except:
                     return "Couldnt change input to slate"
+                '''
                 ## start api
                 try:
                     response = client.start_channel(ChannelId=channelid)
@@ -801,6 +844,9 @@ def lambda_handler(event, context):
         return api_response(200,response)
     elif functiontorun == "describeChannelState":
         response = describeChannelState()
+        return api_response(200,response)
+    elif functiontorun == "inputPrepare":
+        response = inputPrepare()
         return api_response(200,response)
 
     else: # return error#

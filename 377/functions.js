@@ -11,7 +11,6 @@ function getConfig(){
 
   var request = new XMLHttpRequest();
   request.open('GET', json_endpoint, false);
-  request.setRequestHeader("Host",window.apiendpointhost)
 
   request.onload = function() {
 
@@ -147,10 +146,46 @@ function chpromoins(promo_number){
     emlSwitchAction(input, channelid, bucket, "immediateContinue", "", 200, "master", "")
     }
     // reset styling on the pip now that the action has been performed
-    fadeAway('promo'+promo_number)
+    fadeAway('promo'+promo_number);
+    fadeAway('prepare1');fadeAway('prepare2');fadeAway('prepare3');fadeAway('prepare4');
 }
 
 } // end chpromoins function
+
+function chpromoprep(promo_number){
+  console.log("Running promo prepare function")
+
+  if ( pipSelector == "" ) {
+    console.log("Operator has not selected a channel thumbnail. Select a thumbnail first before an action can be performed")
+    alert("Please select a channel thumbnail first!")
+  } else {
+    console.log("Selected Channel ID : "+live_event_map[pipSelector].primary_channel_id)
+    console.log("Found " + live_event_map[pipSelector].promos.length + " promos in channel map")
+
+    if ( promo_number > live_event_map[pipSelector].promos.length ) {
+      alert("Cannot play promo, it doesn't exist. You need to update the channel map via API with the promo URL")
+
+    } else {
+        document.getElementById('prepare1').classList.remove('pressedbutton');
+        document.getElementById('prepare2').classList.remove('pressedbutton');
+        document.getElementById('prepare3').classList.remove('pressedbutton');
+        document.getElementById('prepare4').classList.remove('pressedbutton');
+        document.getElementById('prepare'+promo_number).classList.add('pressedbutton');
+        promo_to_play = live_event_map[pipSelector].promos[promo_number-1]
+        console.log("Sending an API call to MediaLive to prep promo : " + promo_to_play)
+        s3_url = new URL(promo_to_play.replace("s3://","https://"))
+        bucket = s3_url.hostname
+        input = s3_url.pathname.replace(/^\/+/, '')
+        console.log("Promo bucket : " + bucket)
+        console.log("Promo key : " + input)
+
+        channelid = live_event_map[pipSelector].primary_channel_id + ":" + live_event_map[pipSelector].channel_region
+        console.log("Submitting API Call to prepare promo now")
+        emlSwitchAction(input, channelid, bucket, "inputPrepare", "", 200, "master", "")
+    }
+    }
+}
+
 
 var fadeAway = function(buttonid) {
   setTimeout(function(){
@@ -251,7 +286,7 @@ document.getElementById("channel_selector").addEventListener('change', (event) =
           var player = SLDP.init({
             container:          'player-wrp-' + (i + 1),
             stream_url:         streamurl,
-            buffering:          500,
+            buffering:          250,
             autoplay:           true,
             muted:              true,
             height:             360,
@@ -304,6 +339,15 @@ setInterval(function() {
 
 }, 5000);
 
+setInterval(function() {
+
+    var timenow = new Date().toTimeString()
+    document.getElementById("clock").innerHTML = timenow
+
+    //document.getElementById("clock").innerHTML = (hours + ":" + minutes + ":" + seconds + meridiem);
+
+},1000)
+
 /// API Calls
 /// S3 GET OBJECT API CALL - START
 
@@ -323,7 +367,6 @@ function channelState() {
 
     var request = new XMLHttpRequest();
     request.open('GET', url, true);
-    request.setRequestHeader("Host",window.apiendpointhost)
 
     request.onload = function() {
       if (request.status === 200) {
@@ -366,7 +409,6 @@ function s3getObjectsAPI(bucket, apiendpointurl) {
 
     var request = new XMLHttpRequest();
     request.open('GET', url, true);
-    request.setRequestHeader("Host",window.apiendpointhost)
 
     request.onload = function() {
       if (request.status === 200) {
@@ -422,7 +464,6 @@ function getLiveInputs(apiendpointurl) {
 
     var request = new XMLHttpRequest();
     request.open('GET', url, true);
-    request.setRequestHeader("Host",window.apiendpointhost)
 
     request.onload = function() {
       if (request.status === 200) {
@@ -467,7 +508,6 @@ function emlSwitchAction(file, channelid, bucket, takeType, follow, maxresults, 
 
     var putReq = new XMLHttpRequest();
     putReq.open("PUT", url, false);
-    putReq.setRequestHeader("Host",window.apiendpointhost)
     putReq.setRequestHeader("Accept","*/*");
     putReq.send();
 }
@@ -508,7 +548,6 @@ function channelStartStop(startstop){
 
         var putReq = new XMLHttpRequest();
         putReq.open("PUT", url, false);
-        putReq.setRequestHeader("Host",window.apiendpointhost)
         putReq.setRequestHeader("Accept","*/*");
         putReq.send();
 
