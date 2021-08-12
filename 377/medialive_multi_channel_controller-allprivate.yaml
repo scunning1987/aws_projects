@@ -121,6 +121,16 @@ Resources:
     DependsOn:
       - MediaLiveControlConfig
 
+  LambdaInvokePermissionUIAccessProxy:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt UIAccessProxy.Arn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGateway}/*/*/dashboard/*"
+    DependsOn:
+      - MediaLiveControlConfig
+
   #################
   ## Custom Resource
   #################
@@ -203,26 +213,26 @@ Resources:
 
   UIAccessProxy:
     Type: AWS::Lambda::Function
-      Properties:
-        Description: Proxy for S3 UI Access
-        Role: !GetAtt LambdaRole.Arn
-        Runtime: python3.8
-        Handler: index.lambda_handler
-        Timeout: 10
-        MemorySize: 10240
-        Code:
-          S3Bucket: !Ref S3Bucket
-          S3Key: !GetAtt FileMover.ui-access-proxy
-        Tags:
-          - Key: StackName
-            Value: !Ref AWS::StackName
-          - Key: Version
-            Value: 1
-      DependsOn:
-        - S3Bucket
-        - LambdaRole
-        - FileCopier
-        - FileMover
+    Properties:
+      Description: Proxy for S3 UI Access
+      Role: !GetAtt LambdaRole.Arn
+      Runtime: python3.8
+      Handler: index.lambda_handler
+      Timeout: 10
+      MemorySize: 10240
+      Code:
+        S3Bucket: !Ref S3Bucket
+        S3Key: !GetAtt FileMover.ui-access-proxy
+      Tags:
+        - Key: StackName
+          Value: !Ref AWS::StackName
+        - Key: Version
+          Value: 1
+    DependsOn:
+      - S3Bucket
+      - LambdaRole
+      - FileCopier
+      - FileMover
 
   FileCopier:
     Type: AWS::Lambda::Function
@@ -801,15 +811,6 @@ Resources:
     ## VPC
     #################
 
-  S3GatewayEndpoint:
-    Type: AWS::EC2::VPCEndpoint
-    Properties:
-      ServiceName: !Sub com.amazonaws.${AWS::Region}.s3
-      VpcId: !Ref VpcToDeployInto
-      VpcEndpointType: Gateway
-      RouteTableIds:
-        - !Ref S3GatewayRouteTableAssociations
-
   VPCEndpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties:
@@ -828,8 +829,9 @@ Resources:
 Outputs:
   DashboardUrl:
     Description: Dashboard URL for MediaLive control
-    Value: !Sub https://${S3Bucket}.s3.${AWS::Region}.amazonaws.com/${FileMover.ui}
+    #Value: !Sub https://${S3Bucket}.s3.${AWS::Region}.amazonaws.com/${FileMover.ui}
     #Value: !Sub https://${CloudFrontDistribution.DomainName}/${FileMover.ui}
+    Value: !Sub https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${ApiStage}/dashboard/${S3Bucket}/${FileMover.ui}
 
   APIEndpointURLGetSample:
     Description: API Endpoint for getting sample configuration, method - GET

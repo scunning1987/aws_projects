@@ -41,7 +41,7 @@ def lambda_handler(event, context):
         return response_body
 
     ## Log the incoming event
-    LOGGER.info("Event : %s " % (event))
+    print("Event : %s " % (event))
 
     ## Initialize S3 boto3 client
     s3 = boto3.client('s3')
