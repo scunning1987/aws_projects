@@ -840,6 +840,8 @@ Outputs:
       - ''
       - - 'https://'
         - !Ref ApiGateway
+        - '-'
+        - !Ref VPCEndpoint
         - '.execute-api.'
         - !Ref 'AWS::Region'
         - '.amazonaws.com/'
@@ -848,11 +850,11 @@ Outputs:
 
   APIEndpointURLGetConfig:
     Description: API Endpoint for getting existing configuration, method - GET
-    Value: !Sub https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${ApiStage}/dashboard-cfg/existing
+    Value: !Sub https://${ApiGateway}-${VPCEndpoint}.execute-api.${AWS::Region}.amazonaws.com/${ApiStage}/dashboard-cfg/existing
 
   APIEndpointURLPutConfig:
     Description: API Endpoint for updating existing configuration, method - PUT
-    Value: !Sub https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${ApiStage}/dashboard-cfg/update
+    Value: !Sub https://${ApiGateway}-${VPCEndpoint}.execute-api.${AWS::Region}.amazonaws.com/${ApiStage}/dashboard-cfg/update
 
   #APIEndpointURLCTRL:
   #  Description: API Endpoint to control the MediaLive channels. This URL is needed when updating the config
