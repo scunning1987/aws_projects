@@ -560,7 +560,10 @@ Resources:
     Type: AWS::ApiGateway::RestApi
     Properties:
       Name: !Sub ${AWS::StackName}-emlctrl-api-handler
-      Description: !Sub API Handler [${AWS::StackName}]
+      Description: !Sub API Handler [${AWS::StackName}
+      BinaryMediaTypes:
+        - image~1jpeg
+        - text~1html
       EndpointConfiguration:
         Types:
           - PRIVATE

@@ -28,15 +28,17 @@ import json
 import boto3
 import urllib3
 from urllib.parse import urlparse
+import base64
 
 def lambda_handler(event, context):
 
     # Layout for API Response
-    def api_response(status_code,headers,body):
+    def api_response(status_code,headers,body,base64encoded):
         response_body = {
             "statusCode":status_code,
             "headers":headers,
-            "body":body
+            "body":body,
+            "isBase64Encoded": base64encoded
         }
         return response_body
 
@@ -55,15 +57,22 @@ def lambda_handler(event, context):
         key =  '/'.join(event['pathParameters']['proxy'].split("/")[1:])
     except:
         body = "request url not well formed"
-        return api_response(500,headers,body)
+        base64encoded = False
+        return api_response(500,headers,body,base64encoded)
 
     try:
         s3_response = s3.get_object(Bucket=bucket, Key=key)
         headers = s3_response['ResponseMetadata']['HTTPHeaders']
-        body = s3_response['Body'].read().decode('utf-8')
-        return api_response(200,headers,body)
+        if ".jpg" in key:
+            body = base64.b64encode(s3_response['Body'].read()).decode('utf-8')
+            base64encoded = True
+        else:
+            body = s3_response['Body'].read().decode('utf-8')
+            base64encoded = False
+        return api_response(200,headers,body,base64encoded)
     except Exception as e:
         headers = {"content-type":"application/json"}
         #body = json.dumps(e, default = lambda o: f"<<non-serializable: {type(o).__qualname__}>>")
         body = json.dumps(str(e))
-        return api_response(500,headers,body)
+        base64encoded = False
+        return api_response(500,headers,body,base64encoded)
