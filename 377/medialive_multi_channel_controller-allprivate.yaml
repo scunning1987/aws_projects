@@ -989,6 +989,9 @@ Outputs:
     Description: API Endpoint for updating existing configuration, method - PUT
     Value: !Sub https://${ApiGateway}-${VPCEndpoint}.execute-api.${AWS::Region}.amazonaws.com/${ApiStage}/dashboard-cfg/update
 
+  ProxyThumbnailToS3PathTemplate:
+    Description: For the mutl
+
   #APIEndpointURLCTRL:
   #  Description: API Endpoint to control the MediaLive channels. This URL is needed when updating the config
   #  Value: !Sub https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${ApiStage}/dashboard-ctrl

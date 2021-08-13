@@ -308,7 +308,7 @@ function pageLoadFunction(){
   console.log("channel start slate: "+ channel_start_slate)
   console.log("vod bucket: " + bucket)
   console.log("dashboard name: " + deployment_name)
-  var s3_slate_url = new URL(channel_start_slate.replace("s3://","https://"))
+  // var s3_slate_url = new URL(channel_start_slate.replace("s3://","https://")) -- deprecated
   window.slate_bucket = s3_slate_url.hostname
   window.startup_slate_key = s3_slate_url.pathname.replace(/^\/+/, '')
 
@@ -539,7 +539,7 @@ function channelStartStop(startstop){
         var param2 = "&functiontorun=channelStartStop"
         var param3 = "&channelid="+channelid;
         var param4 = "&maxresults=200";
-        var param5 = "&bucket="+slate_bucket + ":" + startup_slate_key.replace(/\//g,"%2F");
+        var param5 = "&bucket=";
         var param6 = "&input="+startstop;
         var param7 = "&follow=";
         var param8 = "&duration=";
