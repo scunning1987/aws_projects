@@ -1,4 +1,3 @@
-import json
 import boto3
 
 # boto3 S3 initialization
@@ -24,7 +23,7 @@ def lambda_handler(event, context):
     copy_source_object = {'Bucket': bucket_name, 'Key': file_key_name}
 
     # S3 copy object operation
-    s3_client.copy_object(CopySource=copy_source_object, Bucket=bucket_name, Key=new_key_name, ACL='public-read')
+    s3_client.copy_object(CopySource=copy_source_object, Bucket=bucket_name, Key=new_key_name, ContentType='image/jpeg')
     
     # S3 delete original object
     s3_client.delete_object(Bucket=bucket_name,Key=file_key_name)

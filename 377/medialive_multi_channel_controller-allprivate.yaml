@@ -131,6 +131,17 @@ Resources:
     DependsOn:
       - MediaLiveControlConfig
 
+  LambdaInvokePermissionS3:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt ThumbnailS3PutRename.Arn
+      Action: lambda:InvokeFunction
+      Principal: s3.amazonaws.com
+      SourceArn: !GetAtt S3Bucket.Arn
+    DependsOn:
+      - S3Bucket
+      - ThumbnailS3PutRename
+
   #################
   ## Custom Resource
   #################
@@ -154,6 +165,21 @@ Resources:
       Api_Ctrl: !Sub https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${ApiStage}/dashboard-ctrl
     DependsOn:
       - ApiGateway
+
+  S3PutEvent:
+    Type: Custom::LambdaToPutS3BucketNotification
+    Properties:
+      ServiceToken: !GetAtt S3BucketNotificationLambda.Arn
+      Region: !Ref 'AWS::Region'
+      Bucket: !Ref S3Bucket
+      Prefix: 'status_thumbnails/'
+      LambdaArn: !GetAtt ThumbnailS3PutRename.Arn
+    DependsOn:
+      - S3Bucket
+      - LambdaRole
+      - S3AccessPolicy
+      - ThumbnailS3PutRename
+      - FileMover
 
   #################
   ## Lambda
@@ -228,6 +254,28 @@ Resources:
           Value: !Ref AWS::StackName
         - Key: Version
           Value: 1
+    DependsOn:
+      - S3Bucket
+      - LambdaRole
+      - FileCopier
+      - FileMover
+
+  ThumbnailS3PutRename:
+    Type: AWS::Lambda::Function
+    Properties:
+      #FunctionName: !Sub ${DeploymentName}-medialive-html5-api-handler
+      Description: S3 PUT Event driven Lambda to remove the incrementing filename of MediaLive Status thumbnails
+      Role: !GetAtt LambdaRole.Arn
+      Runtime: python3.8
+      Handler: index.lambda_handler
+      Timeout: 10
+      MemorySize: 10240
+      Code:
+        S3Bucket: !Ref S3Bucket
+        S3Key: !GetAtt FileMover.jpg-s3-put-rename
+      Tags:
+        - Key: StackName
+          Value: !Ref AWS::StackName
     DependsOn:
       - S3Bucket
       - LambdaRole
@@ -553,9 +601,91 @@ Resources:
     DependsOn:
       - ApiGateway
 
+
+  S3BucketNotificationLambda:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      Handler: index.lambda_handler
+      Role: !GetAtt LambdaRole.Arn
+      Code:
+        ZipFile: |
+
+          from __future__ import print_function
+          import json
+          import boto3
+          import cfnresponse
+
+          SUCCESS = "SUCCESS"
+          FAILED = "FAILED"
+
+          print('Loading function')
+          s3 = boto3.resource('s3')
+
+          def lambda_handler(event, context):
+              print("Received event: " + json.dumps(event, indent=2))
+              responseData={}
+              try:
+                  if event['RequestType'] == 'Delete':
+                      print("Request Type:",event['RequestType'])
+                      Bucket=event['ResourceProperties']['Bucket']
+                      delete_notification(Bucket)
+                      print("Sending response to custom resource after Delete")
+                  elif event['RequestType'] == 'Create' or event['RequestType'] == 'Update':
+                      print("Request Type:",event['RequestType'])
+                      LambdaArn=event['ResourceProperties']['LambdaArn']
+                      Bucket=event['ResourceProperties']['Bucket']
+                      Prefix=event['ResourceProperties']['Prefix'].rsplit("/",1)[0]
+                      object = s3.Object(Bucket,Prefix+'/status.txt')
+                      object.put(Body='status thumbnails directory')
+                      add_notification(LambdaArn, Bucket, Prefix)
+                      object.delete()
+                      responseData={'Bucket':Bucket}
+                      print("Sending response to custom resource")
+                  responseStatus = 'SUCCESS'
+              except Exception as e:
+                  print('Failed to process:', e)
+                  responseStatus = 'FAILED'
+                  responseData = {'Failure': 'Something bad happened : %s .' % (e)}
+              cfnresponse.send(event, context, responseStatus, responseData)
+
+          def add_notification(LambdaArn, Bucket, Prefix):
+              bucket_notification = s3.BucketNotification(Bucket)
+              response = bucket_notification.put(
+                NotificationConfiguration={
+                  'LambdaFunctionConfigurations': [
+                    {
+                        'LambdaFunctionArn': LambdaArn,
+                        'Events': [
+                            's3:ObjectCreated:*'
+                        ],
+                        'Filter':{'Key':{'FilterRules':[{'Name':'prefix','Value':Prefix}]}}
+                    }
+                  ]
+                }
+              )
+              print("event notification put response: %s " % (response))
+              print("Put request completed....")
+
+          def delete_notification(Bucket):
+              bucket_notification = s3.BucketNotification(Bucket)
+              response = bucket_notification.put(
+                  NotificationConfiguration={}
+              )
+              print("Delete request completed....")
+      Runtime: python3.6
+      Timeout: 50
+    DependsOn:
+      - S3Bucket
+      - LambdaRole
+      - S3AccessPolicy
+      - ThumbnailS3PutRename
+      - FileMover
+
+
     #################
     ## API Gateway
     #################
+
   ApiGateway:
     Type: AWS::ApiGateway::RestApi
     Properties:
