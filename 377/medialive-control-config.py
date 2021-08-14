@@ -74,7 +74,7 @@ def lambda_handler(event, context):
             return api_response(500,{"status":"malformed api body, please refer to the template"})
 
         # check main keys are present
-        main_keys = ["channel_map","vod_bucket","channel_start_slate","dashboard_title","control_api_endpoint_url","control_api_endpoint_host_header","promo_bucket_region"]
+        main_keys = ["channel_map","vod_bucket","dashboard_title","control_api_endpoint_url","promo_bucket_region"]
         for main_key in list(body_json.keys()):
             if main_key not in main_keys:
                 return api_response(500,{"status":"malformed api body, please refer to the template"})

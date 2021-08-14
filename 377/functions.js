@@ -18,7 +18,7 @@ function getConfig(){
     const jdata = JSON.parse(request.responseText);
     console.log(jdata)
     window.live_event_map = jdata.channel_map
-    window.channel_start_slate = jdata.channel_start_slate
+    window.channel_start_slate = jdata.channel_start_slate // deprecated in this ui version
     window.deployment_name = jdata.dashboard_title
     window.bucket = jdata.vod_bucket
     window.promo_bucket_region = jdata.promo_bucket_region
@@ -317,13 +317,15 @@ function pageLoadFunction(){
   document.getElementById('deployment_title').innerHTML = '<h1 style="text-align:center">'+deployment_name_pretty+'</h1>'
 
   var total_channels = Object.keys(live_event_map).length;
-console.log("There are " + total_channels.toString() + " channels in this dashboard")
-window.thumbnail_size = 1
-if ( parseInt(total_channels) < 9 ) {
-  window.thumbnail_size = 2
-} else {
-  window.thumbnail_size = 1
-}
+    console.log("There are " + total_channels.toString() + " channels in this dashboard")
+    window.thumbnail_size = 1
+    if ( parseInt(total_channels) < 9 ) {
+      window.thumbnail_size = 2
+    } else {
+      window.thumbnail_size = 1
+    }
+
+
 
   channelDropdownPopulate()
 

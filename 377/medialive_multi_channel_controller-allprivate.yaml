@@ -107,6 +107,7 @@ Resources:
       FunctionName: !GetAtt MediaLiveControlFunctions.Arn
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
+      SourceAccount: !Ref 'AWS::AccountId'
       SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGateway}/*/*/dashboard-ctrl"
     DependsOn:
       - MediaLiveControlFunctions
@@ -117,6 +118,7 @@ Resources:
       FunctionName: !GetAtt MediaLiveControlConfig.Arn
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
+      SourceAccount: !Ref 'AWS::AccountId'
       SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGateway}/*/*/dashboard-cfg/*"
     DependsOn:
       - MediaLiveControlConfig
@@ -127,6 +129,7 @@ Resources:
       FunctionName: !GetAtt UIAccessProxy.Arn
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
+      SourceAccount: !Ref 'AWS::AccountId'
       SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGateway}/*/*/dashboard/*"
     DependsOn:
       - MediaLiveControlConfig
@@ -137,6 +140,7 @@ Resources:
       FunctionName: !GetAtt ThumbnailS3PutRename.Arn
       Action: lambda:InvokeFunction
       Principal: s3.amazonaws.com
+      SourceAccount: !Ref 'AWS::AccountId'
       SourceArn: !GetAtt S3Bucket.Arn
     DependsOn:
       - S3Bucket
@@ -990,8 +994,8 @@ Outputs:
     Value: !Sub https://${ApiGateway}-${VPCEndpoint}.execute-api.${AWS::Region}.amazonaws.com/${ApiStage}/dashboard-cfg/update
 
   ProxyThumbnailToS3PathTemplate:
-    Description: For the multiviewer, each proxy MediaLive channel should output a thumbnail to this location. Take note of the jpg location as it will be required in the channel_map.json
-    Value: !Sub s3://${S3Bucket}/status_thumbnails/[thumbnail-name].jpg
+    Description: For the multiviewer, each proxy MediaLive channel should output a thumbnail to this location. Take note of the jpg location as it will be required in the channel_map.json. DO NOT PUT AN EXTENSION IN THE NAME IN MEDIALIVE OR A NAME MODIFIER
+    Value: !Sub s3://${S3Bucket}/status_thumbnails/[thumbnail-name]
 
   #APIEndpointURLCTRL:
   #  Description: API Endpoint to control the MediaLive channels. This URL is needed when updating the config
