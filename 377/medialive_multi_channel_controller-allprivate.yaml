@@ -656,7 +656,7 @@ Resources:
                     {
                         'LambdaFunctionArn': LambdaArn,
                         'Events': [
-                            's3:ObjectCreated:*'
+                            's3:ObjectCreated:Put'
                         ],
                         'Filter':{'Key':{'FilterRules':[{'Name':'prefix','Value':Prefix}]}}
                     }
@@ -990,7 +990,8 @@ Outputs:
     Value: !Sub https://${ApiGateway}-${VPCEndpoint}.execute-api.${AWS::Region}.amazonaws.com/${ApiStage}/dashboard-cfg/update
 
   ProxyThumbnailToS3PathTemplate:
-    Description: For the mutl
+    Description: For the multiviewer, each proxy MediaLive channel should output a thumbnail to this location. Take note of the jpg location as it will be required in the channel_map.json
+    Value: !Sub s3://${S3Bucket}/status_thumbnails/[thumbnail-name].jpg
 
   #APIEndpointURLCTRL:
   #  Description: API Endpoint to control the MediaLive channels. This URL is needed when updating the config

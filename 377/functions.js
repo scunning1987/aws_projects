@@ -309,8 +309,8 @@ function pageLoadFunction(){
   console.log("vod bucket: " + bucket)
   console.log("dashboard name: " + deployment_name)
   // var s3_slate_url = new URL(channel_start_slate.replace("s3://","https://")) -- deprecated
-  window.slate_bucket = s3_slate_url.hostname
-  window.startup_slate_key = s3_slate_url.pathname.replace(/^\/+/, '')
+  //window.slate_bucket = s3_slate_url.hostname -- deprecated
+  //window.startup_slate_key = s3_slate_url.pathname.replace(/^\/+/, '') -- deprecated
 
   // write deployment title
   var deployment_name_pretty = deployment_name.toUpperCase().replace("_"," ")
