@@ -29,8 +29,12 @@ import boto3
 import urllib3
 from urllib.parse import urlparse
 import base64
+import os
 
 def lambda_handler(event, context):
+
+    placeholder_bucket = os.environ['PLACEHOLDER_JPG_BUCKET']
+    placeholder_key = os.environ['PLACEHOLDER_JPG_KEY']
 
     # Layout for API Response
     def api_response(status_code,headers,body,base64encoded):
@@ -71,8 +75,21 @@ def lambda_handler(event, context):
             base64encoded = False
         return api_response(200,headers,body,base64encoded)
     except Exception as e:
-        headers = {"content-type":"application/json"}
-        #body = json.dumps(e, default = lambda o: f"<<non-serializable: {type(o).__qualname__}>>")
-        body = json.dumps(str(e))
-        base64encoded = False
-        return api_response(500,headers,body,base64encoded)
+        if ".jpg" in key:
+            try:
+                s3_response = s3.get_object(Bucket=placeholder_bucket, Key=placeholder_key)
+                headers = s3_response['ResponseMetadata']['HTTPHeaders']
+                body = base64.b64encode(s3_response['Body'].read()).decode('utf-8')
+                base64encoded = True
+                return api_response(200,headers,body,base64encoded)
+            except:
+                body = ""
+                base64encoded = False
+                return api_response(404,headers,body,base64encoded)
+        else:
+
+            headers = {"content-type":"application/json"}
+            #body = json.dumps(e, default = lambda o: f"<<non-serializable: {type(o).__qualname__}>>")
+            body = json.dumps(str(e))
+            base64encoded = False
+            return api_response(500,headers,body,base64encoded)
