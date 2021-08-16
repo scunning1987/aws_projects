@@ -4,40 +4,6 @@
 
 //// LEAVE CODE BELOW THIS LINE /////
 
-function getConfig(){
-  var json_data,
-  current_url = window.location.href
-  json_endpoint = current_url.substring(0,current_url.lastIndexOf("/")) + "/channel_map.json"
-
-  var request = new XMLHttpRequest();
-  request.open('GET', json_endpoint, false);
-
-  request.onload = function() {
-
-  if (request.status === 200) {
-    const jdata = JSON.parse(request.responseText);
-    console.log(jdata)
-    window.live_event_map = jdata.channel_map
-    window.channel_start_slate = jdata.channel_start_slate // deprecated in this ui version
-    window.deployment_name = jdata.dashboard_title
-    window.bucket = jdata.vod_bucket
-    window.promo_bucket_region = jdata.promo_bucket_region
-    window.apiendpointurl = jdata.control_api_endpoint_url
-    window.apiendpointhost = jdata.control_api_endpoint_host_header
-    json_data = request.responseText
-     } else {
-    // Reached the server, but it returned an error
-  }
-}
-
-request.onerror = function() {
-  console.error('An error occurred fetching the JSON from ' + json_endpoint);
-};
-
-request.send();
-return json_data
-} // end
-
 function mediaLiveControl(evt, controlName) {
   var i, tabcontent, tablinks;
   tabcontent = document.getElementsByClassName("tabcontent");
@@ -234,7 +200,12 @@ document.getElementById("channel_selector").addEventListener('change', (event) =
   document.getElementById("channel_info").innerHTML += '<p> AWS Region : '+live_event_map[pipSelector].channel_region+' </p>'
 
   document.getElementById("channel_info").innerHTML += '<h3> Promo Videos </h3>'
+  document.getElementById("channel_info").innerHTML += '<a href="#" onclick="inputPreview(1)" id="promo1link">Promo 1 Link</a></br>'
+  document.getElementById("channel_info").innerHTML += '<a href="#" onclick="inputPreview(2)" id="promo2link">Promo 2 Link</a></br>'
+  document.getElementById("channel_info").innerHTML += '<a href="#" onclick="inputPreview(3)" id="promo3link">Promo 3 Link</a></br>'
+  document.getElementById("channel_info").innerHTML += '<a href="#" onclick="inputPreview(4)" id="promo4link">Promo 4 Link</a>'
 
+  /*
   for (s3_promo in live_event_map[pipSelector].promos){
     s3_promo_url = new URL(live_event_map[pipSelector].promos[s3_promo].replace("s3://","https://"))
     promo_bucket = s3_promo_url.hostname
@@ -243,7 +214,7 @@ document.getElementById("channel_selector").addEventListener('change', (event) =
 
     document.getElementById("channel_info").innerHTML += '<a href="'+s3_https_url+'" target="_blank"> Promo : '+ promo_key +'</a></br>'
   }
-
+  */
 
   // initialize the low latency players
   function startPlayers () {
@@ -300,12 +271,25 @@ document.getElementById("channel_selector").addEventListener('change', (event) =
   startPlayers()
 });
 
+function inputPreview(promo_number){
+  console.log("Going to create presign url for Promo " + promo_number)
+  promo_s3uri = live_event_map[pipSelector]['promos'][promo_number-1]
+  console.log("Promo S3 URI: " + promo_s3uri)
 
+  var s3_promo_url = new URL(promo_s3uri.replace("s3://","https://"))
+  var s3_promo_bucket = s3_promo_url.hostname
+  var s3_promo_key = s3_promo_url.pathname.replace(/^\/+/, '')
+
+  var presign_url = presignGenerator(s3_promo_bucket,s3_promo_key);
+  console.log("opening s3 URL: " + presign_url)
+  window.open(presign_url,'_blank')
+
+}
 
 function pageLoadFunction(){
   getConfig()
   console.log("channel map : " + JSON.stringify(live_event_map))
-  console.log("channel start slate: "+ channel_start_slate)
+  //console.log("channel start slate: "+ channel_start_slate)
   console.log("vod bucket: " + bucket)
   console.log("dashboard name: " + deployment_name)
   // var s3_slate_url = new URL(channel_start_slate.replace("s3://","https://")) -- deprecated
@@ -351,8 +335,86 @@ setInterval(function() {
 },1000)
 
 /// API Calls
-/// S3 GET OBJECT API CALL - START
+///
+/// get Config START
+function getConfig(){
+  var json_data,
+  current_url = window.location.href
+  json_endpoint = current_url.substring(0,current_url.lastIndexOf("/")) + "/channel_map.json"
 
+  var request = new XMLHttpRequest();
+  request.open('GET', json_endpoint, false);
+
+  request.onload = function() {
+
+  if (request.status === 200) {
+    const jdata = JSON.parse(request.responseText);
+    console.log(jdata)
+    window.live_event_map = jdata.channel_map
+    //window.channel_start_slate = jdata.channel_start_slate // deprecated in this ui version
+    window.deployment_name = jdata.dashboard_title
+    window.bucket = jdata.vod_bucket
+    window.promo_bucket_region = jdata.promo_bucket_region
+    window.apiendpointurl = jdata.control_api_endpoint_url
+    window.apiendpointhost = jdata.control_api_endpoint_host_header
+    json_data = request.responseText
+     } else {
+    // Reached the server, but it returned an error
+  }
+}
+
+request.onerror = function() {
+  console.error('An error occurred fetching the JSON from ' + json_endpoint);
+};
+
+request.send();
+return json_data
+} // end
+
+/// get Config END
+///
+/// presign Generator START
+function presignGenerator(s3_promo_bucket,s3_promo_key){
+    var presign_url;
+    console.log("s3 presign generator api call: initializing")
+
+    var param1 = "awsaccount=master";
+    var param2 = "&functiontorun=presignGenerator"
+    var param3 = "&channelid=0:x"; // this needs to be full list of channel id's and regions
+    var param4 = "&maxresults=200";
+    var param5 = "&bucket="+s3_promo_bucket;
+    var param6 = "&input="+s3_promo_key;
+    var param7 = "&follow=";
+    var url = apiendpointurl+"?"+param1+param2+param3+param4+param5+param6+param7
+
+    var request = new XMLHttpRequest();
+    request.open('GET', url, false);
+
+  request.onload = function() {
+
+  if (request.status === 200) {
+    var jdata = JSON.parse(request.responseText);
+
+    console.log(jdata)
+    presign_url = jdata.url
+
+     } else {
+    // Reached the server, but it returned an error
+  }
+}
+
+request.onerror = function() {
+  console.error('An error occurred fetching the JSON from ' + url);
+  alert("Could not generate Presign S3 URL")
+};
+
+request.send();
+return presign_url
+} // end
+
+/// presign Generator END
+///
+/// channel state START
 function channelState() {
     console.log("channel state api call: initializing")
     var channellist = [];
@@ -388,6 +450,9 @@ function channelState() {
     request.send();
 }
 
+/// channel state END
+///
+/// S3 GET OBJECT API CALL - START
 function s3getObjectsAPI(bucket, apiendpointurl) {
     console.log("s3 get objects api call: initializing")
     var param1 = "awsaccount=master";
@@ -541,7 +606,7 @@ function channelStartStop(startstop){
         var param2 = "&functiontorun=channelStartStop"
         var param3 = "&channelid="+channelid;
         var param4 = "&maxresults=200";
-        var param5 = "&bucket=";
+        var param5 = "&bucket=bucket:path/key.mp4";
         var param6 = "&input="+startstop;
         var param7 = "&follow=";
         var param8 = "&duration=";

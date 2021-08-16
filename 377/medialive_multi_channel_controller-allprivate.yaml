@@ -42,6 +42,35 @@ Resources:
         - Key: Version
           Value: 2
 
+  S3BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref S3Bucket
+      PolicyDocument: !Sub
+        |-
+        {
+            "Version": "2012-10-17",
+            "Id": "12345678",
+            "Statement": [
+                {
+                    "Sid": "Access-to-specific-VPCE-only",
+                    "Effect": "Allow",
+                    "Principal": "*",
+                    "Action": "s3:*",
+                    "Resource": [
+                        "arn:aws:s3:::${S3Bucket}/*",
+                        "arn:aws:s3:::${S3Bucket}"
+                    ],
+                    "Condition": {
+                        "StringEquals": {
+                            "aws:SourceVpc": "${VpcToDeployInto}"
+                        }
+                    }
+                }
+            ]
+        }
+
+
   #################
   ## IAM & Permissions
   #################
@@ -253,7 +282,7 @@ Resources:
       Environment:
         Variables:
           PLACEHOLDER_JPG_BUCKET: !Ref S3Bucket
-          PLACEHOLDER_JPG_BUCKET: !GetAtt FileMover.placeholder
+          PLACEHOLDER_JPG_KEY: !GetAtt FileMover.placeholder
       Tags:
         - Key: StackName
           Value: !Ref AWS::StackName

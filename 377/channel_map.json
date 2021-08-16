@@ -5,8 +5,8 @@
       "proxy_gen_channel": 4856923,
       "channel_friendly_name": "Soccer Channel 1",
       "channel_region": "us-west-2",
-      "low_latency_url_source": "ws://34.212.225.202/emx/20001",
-      "low_latency_url_medialive": "ws://34.212.225.202/eml/20001",
+      "low_latency_url_source": "wss://34.212.225.202/emx/20001",
+      "low_latency_url_medialive": "wss://34.212.225.202/eml/20001",
       "proxy_thumbnail_name":"channel1.jpg",
       "promos": [
         "s3://cunsco-media/vod_slates/promo1.mp4",

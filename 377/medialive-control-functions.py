@@ -540,12 +540,13 @@ def lambda_handler(event, context):
         if input == "start":
             if channel_status != "RUNNING":
 
+                '''
+                try:
                 # schedule immediate swith to slate:
                 slate_path = event['bucket'].split(":")[1].replace("%2F","/")
                 inputs = list_inputs("dictionary") # return dictionary : file, live, livelist
 
-                '''
-                try:
+
                     batch_update("immediate", "", inputs, slate_path,channel_input_attachments)
                 except:
                     return "Couldnt change input to slate"

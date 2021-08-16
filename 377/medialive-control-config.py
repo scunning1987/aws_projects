@@ -2,6 +2,7 @@ import json
 import os
 import boto3
 import logging
+import base64
 
 LOGGER = logging.getLogger()
 LOGGER.setLevel(logging.INFO)
@@ -67,21 +68,27 @@ def lambda_handler(event, context):
         LOGGER.info("The API request was a PUT request")
 
         # need to validate the body
-        body_json = json.loads(event['body'])
+        if event['isBase64Encoded']:
+            # Decode body
+            body_string =  base64.b64decode(event['body'])
+        else:
+            body_string = event['body']
+
+        body_json = json.loads(body_string)
 
         # check length
         if len(body_json) < 1:
             return api_response(500,{"status":"malformed api body, please refer to the template"})
 
         # check main keys are present
-        main_keys = ["channel_map","vod_bucket","dashboard_title","control_api_endpoint_url","promo_bucket_region","proxy_thumbnail_name"]
+        main_keys = ["channel_map","vod_bucket","dashboard_title","control_api_endpoint_url","promo_bucket_region"]
         for main_key in list(body_json.keys()):
             if main_key not in main_keys:
                 return api_response(500,{"status":"malformed api body, please refer to the template"})
 
-        # check channel start slate references mp4
-        if ".mp4" not in str(body_json['channel_start_slate']).lower():
-            return api_response(500,{"status":"Channel start slate must reference an MP4 file"})
+        # check channel start slate references mp4 ### DEPRECATED FROM UI
+        #if ".mp4" not in str(body_json['channel_start_slate']).lower():
+        #    return api_response(500,{"status":"Channel start slate must reference an MP4 file"})
 
         # add check for bucket...
 
@@ -125,7 +132,7 @@ def lambda_handler(event, context):
                     return api_response(500,{"status":"channel key is not of type dictionary"})
 
                 # Check channel map keys are present
-                channel_keys = ["primary_channel_id","proxy_gen_channel","channel_friendly_name","channel_region","low_latency_url_source","low_latency_url_medialive","promos"]
+                channel_keys = ["primary_channel_id","proxy_gen_channel","channel_friendly_name","channel_region","low_latency_url_source","low_latency_url_medialive","promos","proxy_thumbnail_name"]
                 for channel_key in list(channel_map[channel].keys()):
                     if channel_key not in channel_keys:
                         return api_response(500,{"status":"channel dictionary is missing one or more keys. should contain %s " % (channel_keys)})
