@@ -650,6 +650,21 @@ def lambda_handler(event, context):
             state = {"status":"UNKNOWN"}
             return state
 
+    def presignGenerator():
+        # initialize s3 client
+        s3_client = boto3.client('s3')
+
+        #bucket = "cunsco-east" # K.wendt mod
+        key = input #"INTRO.mp4" # K.wendt mod
+        expiration = 180
+
+        try:
+            response = s3_client.generate_presigned_url('get_object',Params={'Bucket': bucket,'Key': key},ExpiresIn=expiration)
+            return {"url":response}
+        except Exception as e:
+            return e
+            return {"url":"error"}
+
     def getEntitlementArn(station_code):
         response = emxclient.list_entitlements(MaxResults=20)
         entitlement_list = response['Entitlements']
@@ -848,6 +863,9 @@ def lambda_handler(event, context):
         return api_response(200,response)
     elif functiontorun == "inputPrepare":
         response = inputPrepare()
+        return api_response(200,response)
+    elif functiontorun == "presignGenerator":
+        response = presignGenerator()
         return api_response(200,response)
 
     else: # return error#
