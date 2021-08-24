@@ -32,7 +32,7 @@ Parameters:
   IAMRoleForMediaLive:
     Type: String
     Default: MediaLiveAccessRole
-    Description: Target Role to assign to MediaConnect
+    Description: Target Role to assign to MediaLive
 
   IAMRoleForMediaConnectToCreateInVPC:
     Type: String
@@ -65,6 +65,15 @@ Resources:
         Protocol: rtp
         WhitelistCidr: 0.0.0.0/0
 
+  MainFlow1Interface1:
+    Type: AWS::MediaConnect::FlowVpcInterface
+    Properties:
+      FlowArn: !Ref MediaFlowIn1
+      Name: !Sub "${Prefix}-iface-${AZ1}-${Subnet1}"
+      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaConnect}"
+      SecurityGroupIds: !Ref MediaConnectInterfaceSG
+      SubnetId: !Ref Subnet1
+
   MediaFlowOut1:
     Type: AWS::MediaConnect::Flow
     Properties:
@@ -74,6 +83,15 @@ Resources:
         Name: !Sub "${Prefix}MediaFlowOut"
         Protocol: rtp
         WhitelistCidr: 0.0.0.0/0
+
+  MainFlowOut1Interface1:
+    Type: AWS::MediaConnect::FlowVpcInterface
+    Properties:
+      FlowArn: !Ref MediaFlowOut1
+      Name: !Sub "${Prefix}-iface-${AZ1}-${Subnet1}"
+      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaConnect}"
+      SecurityGroupIds: !Ref MediaConnectInterfaceSG
+      SubnetId: !Ref Subnet1
 
   ML1EMXInputProxy:
     Type: AWS::MediaLive::Input
