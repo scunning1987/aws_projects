@@ -36,17 +36,17 @@ try:
 except:
     LOGGER.warning("Received bad data, defaulting to 50 channels")
     # default
-    channel_count = 50
+    channel_count = 40
 
 try:
     udp_start_emx = int(sys.argv[2])
     LOGGER.info("Starting port number in range: %s , please make sure your EC2 security groups are set accordingly" % (str(udp_start_emx)))
     if int(udp_start_emx) < 5000:
         LOGGER.warning("Starting port set too low, defaulting to 20001")
-        udp_start_emx = 20001
+        udp_start_emx = 20000
 except:
     # default
-    channel_count = 20001
+    udp_start_emx = 20000
 
 live_stream_app_name = "lowlatency"
 
@@ -202,7 +202,7 @@ LOGGER.info("Beginning Camera and Streamer building...")
 template_rules_conf_json['SyncResponse']['RtmpSettings']['apps'][0]['app'] = live_stream_app_name
 
 # for each channel configure the lists for 'cameras' and 'streamers'
-port_increment = 0
+port_increment = 10
 for channel_number in range(0,channel_count):
 
     for source_type in stream_source:
@@ -211,9 +211,9 @@ for channel_number in range(0,channel_count):
             port_number = udp_start + port_increment
             stream_name = port_number
         else:
-            udp_start = udp_start_emx + 100
+            udp_start = udp_start_emx + 1000
             port_number = udp_start + port_increment
-            stream_name = port_number - 100
+            stream_name = port_number - 1000
         cameras = dict()
         cameras["id"] = "%03d-%s-%s" % (channel_number,port_number,"in")
         cameras["ip"] = "0.0.0.0"

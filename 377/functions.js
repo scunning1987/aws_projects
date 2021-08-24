@@ -577,6 +577,7 @@ function emlSwitchAction(file, channelid, bucket, takeType, follow, maxresults, 
     putReq.open("PUT", url, false);
     putReq.setRequestHeader("Accept","*/*");
     putReq.send();
+    alert("Command Executed Successfully")
 }
 
 /// EML SWITCH - END
