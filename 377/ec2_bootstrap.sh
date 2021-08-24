@@ -9,7 +9,7 @@ sudo yum -y makecache
 sudo yum -y install nimble
 sudo yum -y install wget
 sudo wget https://raw.githubusercontent.com/scunning1987/aws_projects/main/377/ec2_stream_builder.py
-sudo python ec2_stream_builder.py 40 20001
+sudo python ec2_stream_builder.py 40 20000
 sudo echo "ssl_port = 443" >> /etc/nimble/nimble.conf
 sudo echo "ssl_certificate = /etc/ssl/private/streamer.cert" >> /etc/nimble/nimble.conf
 sudo echo "ssl_certificate_key = /etc/ssl/private/streamer.key" >> /etc/nimble/nimble.conf

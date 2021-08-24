@@ -233,7 +233,7 @@ for channel_number in range(0,channel_count):
 
         cameras_list.append(cameras)
         streams_list.append(streams)
-    port_increment += 1
+    port_increment += 10
 
 # Replace Cameras List
 template_rules_conf_json['SyncResponse']['Cameras'] = cameras_list
