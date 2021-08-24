@@ -7,13 +7,29 @@
       "channel_region": "us-west-2",
       "low_latency_url_source": "wss://34.212.225.202/emx/20001",
       "low_latency_url_medialive": "wss://34.212.225.202/eml/20001",
-      "proxy_thumbnail_name":"channel1.jpg",
-      "promos": [
-        "s3://cunsco-media/vod_slates/promo1.mp4",
-        "s3://cunsco-media/vod_slates/promo2.mp4",
-        "s3://cunsco-media/vod_slates/promo3.mp4",
-        "s3://cunsco-media/vod_slates/promo4.mp4"
-      ]
+      "proxy_thumbnail_name":"channel1.jpg"
+    }
+  },
+  "promos": {
+    "1": {
+      "s3uri": "s3://cunsco-media/vod_slates/promo1.mp4",
+      "description": "Serie A Intro"
+    },
+    "2": {
+      "s3uri": "s3://cunsco-media/vod_slates/promo1.mp4",
+      "description": "Serie A Outro"
+    },
+    "3": {
+      "s3uri": "s3://cunsco-media/vod_slates/promo1.mp4",
+      "description": "La Liga"
+    },
+    "4": {
+      "s3uri": "s3://cunsco-media/vod_slates/promo1.mp4",
+      "description": "UEFA Conference"
+    },
+    "5": {
+      "s3uri": "s3://cunsco-media/vod_slates/promo1.mp4",
+      "description": "UEFA Europa"
     }
   },
   "vod_bucket":"schedule-action-assets",

@@ -38,14 +38,16 @@ function chstartstopcontrol(action_type){
     console.log("Operator has not selected a channel thumbnail. Select a thumbnail first before an action can be performed")
     alert("Please select a channel thumbnail first!")
   } else {
-  document.getElementById(action_type).classList.add('pressedbutton');
-  console.log("action type: "+action_type+" for channel ID : "+live_event_map[pipSelector].primary_channel_id)
-  // API Call to start/stop channel
-  channelStartStop(action_type)
+  if (window.confirm("Do you really want to "+action_type+" this channel?")) {
 
-  // reset styling on the pip now that the action has been performed
-  fadeAway(action_type)
+      document.getElementById(action_type).classList.add('pressedbutton');
+      console.log("action type: "+action_type+" for channel ID : "+live_event_map[pipSelector].primary_channel_id)
+      // API Call to start/stop channel
+      channelStartStop(action_type)
 
+      // reset styling on the pip now that the action has been performed
+      fadeAway(action_type)
+    }
   }
 }
 
@@ -92,14 +94,10 @@ function chpromoins(promo_number){
     alert("Please select a channel thumbnail first!")
   } else {
     console.log("Selected Channel ID : "+live_event_map[pipSelector].primary_channel_id)
-    console.log("Found " + live_event_map[pipSelector].promos.length + " promos in channnel map")
+    console.log("Found " + promosdict.length + " promos in channel map")
 
-    if ( promo_number > live_event_map[pipSelector].promos.length ) {
-      alert("Cannot play promo, it doesn't exist. You need to update the channel map via API with the promo URL")
-
-    } else {
     document.getElementById('promo'+promo_number).classList.add('pressedbutton');
-    promo_to_play = live_event_map[pipSelector].promos[promo_number-1]
+    promo_to_play = promosdict[promo_number].s3uri
     console.log("Sending an API call to MediaLive to start promo : " + promo_to_play)
     s3_url = new URL(promo_to_play.replace("s3://","https://"))
     promo_bucket = s3_url.hostname
@@ -110,7 +108,7 @@ function chpromoins(promo_number){
     channelid = live_event_map[pipSelector].primary_channel_id + ":" + live_event_map[pipSelector].channel_region
     console.log("Submitting API Call to insert promo now")
     emlSwitchAction(input, channelid, promo_bucket, "immediateContinue", "", 200, "master", "")
-    }
+
     // reset styling on the pip now that the action has been performed
     fadeAway('promo'+promo_number);
     fadeAway('prepare1');fadeAway('prepare2');fadeAway('prepare3');fadeAway('prepare4');
@@ -126,29 +124,25 @@ function chpromoprep(promo_number){
     alert("Please select a channel thumbnail first!")
   } else {
     console.log("Selected Channel ID : "+live_event_map[pipSelector].primary_channel_id)
-    console.log("Found " + live_event_map[pipSelector].promos.length + " promos in channel map")
+    console.log("Found " + promosdict.length + " promos in channel map")
 
-    if ( promo_number > live_event_map[pipSelector].promos.length ) {
-      alert("Cannot play promo, it doesn't exist. You need to update the channel map via API with the promo URL")
+    document.getElementById('prepare1').classList.remove('pressedbutton');
+    document.getElementById('prepare2').classList.remove('pressedbutton');
+    document.getElementById('prepare3').classList.remove('pressedbutton');
+    document.getElementById('prepare4').classList.remove('pressedbutton');
+    document.getElementById('prepare'+promo_number).classList.add('pressedbutton');
+    promo_to_play = promosdict[promo_number].s3uri
+    console.log("Sending an API call to MediaLive to prep promo : " + promo_to_play)
+    s3_url = new URL(promo_to_play.replace("s3://","https://"))
+    promo_bucket = s3_url.hostname
+    input = s3_url.pathname.replace(/^\/+/, '')
+    console.log("Promo bucket : " + promo_bucket)
+    console.log("Promo key : " + input)
 
-    } else {
-        document.getElementById('prepare1').classList.remove('pressedbutton');
-        document.getElementById('prepare2').classList.remove('pressedbutton');
-        document.getElementById('prepare3').classList.remove('pressedbutton');
-        document.getElementById('prepare4').classList.remove('pressedbutton');
-        document.getElementById('prepare'+promo_number).classList.add('pressedbutton');
-        promo_to_play = live_event_map[pipSelector].promos[promo_number-1]
-        console.log("Sending an API call to MediaLive to prep promo : " + promo_to_play)
-        s3_url = new URL(promo_to_play.replace("s3://","https://"))
-        promo_bucket = s3_url.hostname
-        input = s3_url.pathname.replace(/^\/+/, '')
-        console.log("Promo bucket : " + promo_bucket)
-        console.log("Promo key : " + input)
+    channelid = live_event_map[pipSelector].primary_channel_id + ":" + live_event_map[pipSelector].channel_region
+    console.log("Submitting API Call to prepare promo now")
+    emlSwitchAction(input, channelid, promo_bucket, "inputPrepare", "", 200, "master", "")
 
-        channelid = live_event_map[pipSelector].primary_channel_id + ":" + live_event_map[pipSelector].channel_region
-        console.log("Submitting API Call to prepare promo now")
-        emlSwitchAction(input, channelid, promo_bucket, "inputPrepare", "", 200, "master", "")
-    }
     }
 }
 
@@ -199,11 +193,14 @@ document.getElementById("channel_selector").addEventListener('change', (event) =
   document.getElementById("channel_info").innerHTML += '<p> Channel ID : '+live_event_map[pipSelector].primary_channel_id+' </p>'
   document.getElementById("channel_info").innerHTML += '<p> AWS Region : '+live_event_map[pipSelector].channel_region+' </p>'
 
+  // promosdict."1".description
   document.getElementById("channel_info").innerHTML += '<h3> Promo Videos </h3>'
-  document.getElementById("channel_info").innerHTML += '<a href="#" onclick="inputPreview(1)" id="promo1link">Promo 1 Link</a></br>'
-  document.getElementById("channel_info").innerHTML += '<a href="#" onclick="inputPreview(2)" id="promo2link">Promo 2 Link</a></br>'
-  document.getElementById("channel_info").innerHTML += '<a href="#" onclick="inputPreview(3)" id="promo3link">Promo 3 Link</a></br>'
-  document.getElementById("channel_info").innerHTML += '<a href="#" onclick="inputPreview(4)" id="promo4link">Promo 4 Link</a>'
+  document.getElementById("channel_info").innerHTML += '<a href="#" onclick="inputPreview(1)" id="promo1link">Promo 1 : '+promosdict["1"].description+'</a></br>'
+  document.getElementById("channel_info").innerHTML += '<a href="#" onclick="inputPreview(2)" id="promo2link">Promo 2 : '+promosdict["2"].description+'</a></br>'
+  document.getElementById("channel_info").innerHTML += '<a href="#" onclick="inputPreview(3)" id="promo3link">Promo 3 : '+promosdict["3"].description+'</a></br>'
+  document.getElementById("channel_info").innerHTML += '<a href="#" onclick="inputPreview(4)" id="promo4link">Promo 4 : '+promosdict["4"].description+'</a></br>'
+  document.getElementById("channel_info").innerHTML += '<a href="#" onclick="inputPreview(5)" id="promo5link">Promo 5 : '+promosdict["5"].description+'</a>'
+
 
   /*
   for (s3_promo in live_event_map[pipSelector].promos){
@@ -273,7 +270,7 @@ document.getElementById("channel_selector").addEventListener('change', (event) =
 
 function inputPreview(promo_number){
   console.log("Going to create presign url for Promo " + promo_number)
-  promo_s3uri = live_event_map[pipSelector]['promos'][promo_number-1]
+  promo_s3uri = promosdict[promo_number].s3uri
   console.log("Promo S3 URI: " + promo_s3uri)
 
   var s3_promo_url = new URL(promo_s3uri.replace("s3://","https://"))
@@ -357,6 +354,7 @@ function getConfig(){
     window.promo_bucket_region = jdata.promo_bucket_region
     window.apiendpointurl = jdata.control_api_endpoint_url
     window.apiendpointhost = jdata.control_api_endpoint_host_header
+    window.promosdict = jdata.promos
     json_data = request.responseText
      } else {
     // Reached the server, but it returned an error

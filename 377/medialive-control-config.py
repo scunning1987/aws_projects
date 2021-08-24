@@ -81,7 +81,7 @@ def lambda_handler(event, context):
             return api_response(500,{"status":"malformed api body, please refer to the template"})
 
         # check main keys are present
-        main_keys = ["channel_map","vod_bucket","dashboard_title","control_api_endpoint_url","promo_bucket_region"]
+        main_keys = ["channel_map","vod_bucket","dashboard_title","control_api_endpoint_url","promo_bucket_region","promos"]
         for main_key in list(body_json.keys()):
             if main_key not in main_keys:
                 return api_response(500,{"status":"malformed api body, please refer to the template"})
@@ -109,12 +109,6 @@ def lambda_handler(event, context):
               "channel_region": "us-west-2",
               "low_latency_url_source": "ws://34.212.225.202:8081/emx/20001",
               "low_latency_url_medialive": "ws://34.212.225.202:8081/eml/20001",
-              "promos": [
-                "s3://cunsco-media/vod_slates/promo1.mp4",
-                "s3://cunsco-media/vod_slates/promo2.mp4",
-                "s3://cunsco-media/vod_slates/promo3.mp4",
-                "s3://cunsco-media/vod_slates/promo4.mp4"
-              ]
             },
         '''
 
@@ -132,24 +126,10 @@ def lambda_handler(event, context):
                     return api_response(500,{"status":"channel key is not of type dictionary"})
 
                 # Check channel map keys are present
-                channel_keys = ["primary_channel_id","proxy_gen_channel","channel_friendly_name","channel_region","low_latency_url_source","low_latency_url_medialive","promos","proxy_thumbnail_name"]
+                channel_keys = ["primary_channel_id","proxy_gen_channel","channel_friendly_name","channel_region","low_latency_url_source","low_latency_url_medialive","proxy_thumbnail_name"]
                 for channel_key in list(channel_map[channel].keys()):
                     if channel_key not in channel_keys:
                         return api_response(500,{"status":"channel dictionary is missing one or more keys. should contain %s " % (channel_keys)})
-
-                ## check promos is a list with 4 entries
-                if isinstance(channel_map[channel]['promos'],list) == False:
-                    return api_response(500,"promo key must contain a list of entries")
-
-                ## Is list but not right amount of items
-                if isinstance(channel_map[channel]['promos'],list) == True:
-                    if len(channel_map[channel]['promos']) != 4:
-                        return api_response(500,"Not submitted the right amount of promo URL's. Should be 4 in list format")
-
-                #### check item 5 list contains valid s3 links to mp4s
-                for item in channel_map[channel]['promos']:
-                    if "s3://" not in item.lower() or ".mp4" not in item.lower():
-                        return api_response(500,"Promo S3 url is not valid. must be s3:// protocol and reference an MP4 file")
 
                 # Add one to the channel index as you iterate through
                 channel_number +=1

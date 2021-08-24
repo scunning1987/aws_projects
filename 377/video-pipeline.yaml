@@ -36,12 +36,16 @@ Parameters:
 
   IAMRoleForMediaConnectToCreateInVPC:
     Type: String
-    Default: arn:aws:iam::301520684698:role/MediaConnectFullAccessToVPC
+    Default: MediaConnectFullAccessToVPC
     Description: Role for MediaConnect to assume in order to create VPC resources
 
   MediaLiveSGs:
     Type: List<AWS::EC2::SecurityGroup::Id>
     Description: Target SGs to apply to MediaLive Inputs
+
+  MediaConnectInterfaceSG:
+    Type: List<AWS::EC2::SecurityGroup::Id>
+    Description: Target SGs to apply to MediaConnect VPC endpoints
 
   InputProtocol:
     Type: String
@@ -54,7 +58,9 @@ Parameters:
     Description: Target input protocol that is expected from the source stream (if UDP - you will need a zixi conversion ec2, and this will be zixi-push)
 
 Resources:
-
+###
+### MediaConnect
+###
   MediaFlowIn1:
     Type: AWS::MediaConnect::Flow
     Properties:
@@ -62,15 +68,15 @@ Resources:
       Name: !Sub "${Prefix}MediaFlowIn"
       Source:
         Name: !Sub "${Prefix}MediaFlowIn"
-        Protocol: rtp
+        Protocol: zixi-push
         WhitelistCidr: 0.0.0.0/0
 
-  MainFlow1Interface1:
+  EMX1Interface1:
     Type: AWS::MediaConnect::FlowVpcInterface
     Properties:
       FlowArn: !Ref MediaFlowIn1
       Name: !Sub "${Prefix}-iface-${AZ1}-${Subnet1}"
-      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaConnect}"
+      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaConnectToCreateInVPC}"
       SecurityGroupIds: !Ref MediaConnectInterfaceSG
       SubnetId: !Ref Subnet1
 
@@ -81,18 +87,21 @@ Resources:
       Name: !Sub "${Prefix}MediaFlowOut"
       Source:
         Name: !Sub "${Prefix}MediaFlowOut"
-        Protocol: rtp
+        Protocol: rtp-fec
         WhitelistCidr: 0.0.0.0/0
 
-  MainFlowOut1Interface1:
+  EMX1Interface2:
     Type: AWS::MediaConnect::FlowVpcInterface
     Properties:
       FlowArn: !Ref MediaFlowOut1
       Name: !Sub "${Prefix}-iface-${AZ1}-${Subnet1}"
-      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaConnect}"
+      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaConnectToCreateInVPC}"
       SecurityGroupIds: !Ref MediaConnectInterfaceSG
       SubnetId: !Ref Subnet1
 
+###
+### MediaLive
+###
   ML1EMXInputProxy:
     Type: AWS::MediaLive::Input
     Properties:
