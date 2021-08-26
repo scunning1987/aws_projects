@@ -107,10 +107,11 @@ def lambda_handler(event, context):
             attachedchannelid = str(channel['AttachedChannels'])
             if channelid in attachedchannelid:
                 if str(channel['Type']) in ('RTMP_PUSH', 'UDP_PUSH', 'RTP_PUSH', 'RTMP_PULL', 'URL_PULL', 'MEDIACONNECT', 'INPUT_DEVICE') or str(channel['InputSourceType']) == 'STATIC':
-                    liveinputs.append({'name' : channel['Name'], 'type' : channel['Type']})
+                    liveinputs.append({'name' : channel['Name'], 'type' : channel['Type'], 'id':channel['Id']})
                     liveinputslist.append(channel['Name'])
                 if "DYNAMIC" in channel['InputSourceType']:
-                    fileinputs.append(channel['Name'])
+                    fileinputs.append({'name':channel['Name'],'id':channel['Id']})
+
         if len(fileinputs) is 0:
             print("ERROR: No dynamic inputs attached to this channel!")
         if len(liveinputs) is 0:
@@ -213,17 +214,29 @@ def lambda_handler(event, context):
         if type == "immediate-continue" or type == "input-prepare":
             # Find a CONTINUE dynamic file (For promo / play once functionality)
             for input in input_attachments:
-                if input['InputSettings']['SourceEndBehavior'] == "CONTINUE" and input['InputAttachmentName'] in inputs['file']:
-                    inputattachref = input['InputAttachmentName']
+                if input['InputSettings']['SourceEndBehavior'] == "CONTINUE":
+                    for fileinput in inputs['file']:
+                        if input['InputId'] == fileinput['id']:
+                            inputattachref = input['InputAttachmentName']
+
         elif type == "live":
-            inputattachref = inputkey
+            live_input_id = ""
+            for liveinput in inputs['live']:
+                if liveinput['name'] == inputkey:
+                    liveinput = liveinput['id']
+            for input in input_attachments:
+                if input['InputId'] == live_input_id:
+                    inputattachref = input['InputAttachmentName']
         elif type == "follow-live":
             inputattachref = inputfile
         else:
             # Find a LOOP attached dynamic file (For Slate loop functionality)
+
             for input in input_attachments:
-                if input['InputSettings']['SourceEndBehavior'] == "LOOP" and input['InputAttachmentName'] in inputs['file']:
-                    inputattachref = input['InputAttachmentName']
+                if input['InputSettings']['SourceEndBehavior'] == "CONTINUE":
+                    for fileinput in inputs['file']:
+                        if input['InputId'] == fileinput['id']:
+                            inputattachref = input['InputAttachmentName']
 
         if type == "immediate" or type == "immediate-continue":
             try:
@@ -514,6 +527,7 @@ def lambda_handler(event, context):
 
     def getLiveInputs():
         inputs = list_inputs("dictionary") # return dictionary : file, live, *livelist*
+        ## TESTING ##
         return inputs['live']
 
     def s3GetAssetList():

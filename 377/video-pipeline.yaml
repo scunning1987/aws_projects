@@ -7,7 +7,7 @@ Parameters:
     Type: String
     Default: Tie002
     AllowedPattern: ^[a-zA-Z][a-zA-Z0-9]*
-    Description: Prefix to append to all Names Created
+    Description: Prefix to append to all Names Created ; expected value example "TieLine002"
 
   AZ1:
     Type: AWS::EC2::AvailabilityZone::Name
@@ -56,6 +56,10 @@ Parameters:
       - "rtp"
       - "rist"
     Description: Target input protocol that is expected from the source stream (if UDP - you will need a zixi conversion ec2, and this will be zixi-push)
+
+  ThumbnailBucket:
+    Type: String
+    Description: Please enter the S3 bucket name that MediaLive will output its JPEG outputs to. This S3 Bucket MUST be the bucket deployed by the operator dashboard CloudFormation Template
 
 Resources:
 ###
@@ -302,6 +306,9 @@ Resources:
         - Id: udp2
           Settings:
             - Url: !Sub "rtp://ec2-streamer-ip-in-subnet-${Subnet1}:20110"
+        - Id: jpgoutputs3
+          Settings:
+            - Url: !Sub "s3ssl://${ThumbnailBucket}/status_thumbnails/${Prefix}"
       EncoderSettings:
         AudioDescriptions:
           - Name: audio_0
@@ -501,8 +508,26 @@ Resources:
             Sharpness: 50
             ScalingBehavior: DEFAULT
             Width: 640
+          - CodecSettings:
+              FrameCaptureSettings:
+                CaptureInterval: 2
+                CaptureIntervalUnits: SECONDS
+            Height: 360
+            Width: 640
+            Name: jpg-output-video
         CaptionDescriptions: []
         OutputGroups:
+          - Name: frame-capture
+            OutputGroupSettings:
+              FrameCaptureGroupSettings:
+                Destination:
+                  DestinationRefId: jpgoutputs3
+            Outputs:
+              - OutputName: jpg-output
+                VideoDescriptionName: jpg-output-video
+                OutputSettings:
+                  FrameCaptureOutputSettings:
+                    NameModifier: ""
           - Name: rtp
             OutputGroupSettings:
               UdpGroupSettings:

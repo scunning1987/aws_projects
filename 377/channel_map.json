@@ -5,9 +5,18 @@
       "proxy_gen_channel": 4856923,
       "channel_friendly_name": "Soccer Channel 1",
       "channel_region": "us-west-2",
-      "low_latency_url_source": "wss://34.212.225.202/emx/20001",
-      "low_latency_url_medialive": "wss://34.212.225.202/eml/20001",
-      "proxy_thumbnail_name":"channel1.jpg"
+      "low_latency_url_source": "wss://34.212.225.202/emx/20010",
+      "low_latency_url_medialive": "wss://34.212.225.202/eml/20010",
+      "proxy_thumbnail_name":"placeholder.jpg"
+    },
+    "2": {
+      "primary_channel_id": 1234567,
+      "proxy_gen_channel": 22333446,
+      "channel_friendly_name": "Soccer Channel 2",
+      "channel_region": "us-west-2",
+      "low_latency_url_source": "wss://34.212.225.202/emx/20020",
+      "low_latency_url_medialive": "wss://34.212.225.202/eml/20020",
+      "proxy_thumbnail_name":"placeholder.jpg"
     }
   },
   "promos": {
