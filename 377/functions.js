@@ -130,6 +130,7 @@ function chpromoprep(promo_number){
     document.getElementById('prepare2').classList.remove('pressedbutton');
     document.getElementById('prepare3').classList.remove('pressedbutton');
     document.getElementById('prepare4').classList.remove('pressedbutton');
+    document.getElementById('prepare5').classList.remove('pressedbutton');
     document.getElementById('prepare'+promo_number).classList.add('pressedbutton');
     promo_to_play = promosdict[promo_number].s3uri
     console.log("Sending an API call to MediaLive to prep promo : " + promo_to_play)
