@@ -219,11 +219,15 @@ def lambda_handler(event, context):
                         if input['InputId'] == fileinput['id']:
                             inputattachref = input['InputAttachmentName']
 
-        elif type == "live":
+
+        elif type == "live" or "follow-live":
+
             live_input_id = ""
+
             for liveinput in inputs['live']:
-                if liveinput['name'] == inputkey:
-                    liveinput = liveinput['id']
+                if liveinput['name'] == inputfile:
+                    live_input_id = liveinput['id']
+
             for input in input_attachments:
                 if input['InputId'] == live_input_id:
                     inputattachref = input['InputAttachmentName']
@@ -362,7 +366,7 @@ def lambda_handler(event, context):
                                 'ActionName': actionname,
                                 'ScheduleActionSettings': {
                                     'InputSwitchSettings': {
-                                        'InputAttachmentNameReference': inputkey
+                                        'InputAttachmentNameReference': inputattachref
                                     },
                                 },
                                 'ScheduleActionStartSettings': {
@@ -464,7 +468,10 @@ def lambda_handler(event, context):
 
     def immediateSwitchLive():
         inputs = list_inputs("dictionary") # return dictionary : file, live, livelist
-        return batch_update("live", "", inputs, inputkey, "")
+        channel_info = describe_channel()
+        channel_input_attachments = channel_info['InputAttachments']
+
+        return batch_update("live", "", inputs, inputkey, channel_input_attachments)
 
     def getSchedule():
         inputs = list_inputs("dictionary") # return dictionary : file, live, livelist
@@ -489,7 +496,7 @@ def lambda_handler(event, context):
                 inputkey = live_input['name']
 
         response = batch_update("follow-live", lastaction['lastaction'], inputs, inputkey,channel_input_attachments)
-        return slate_response
+        return response
 
     def followLast():
         inputs = list_inputs("dictionary") # return dictionary : file, live, livelist
