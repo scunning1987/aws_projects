@@ -140,7 +140,7 @@ function chbumperprep(bumper_number){ // FIX
     console.log("Selected Channel ID : "+live_event_map[pipSelector].primary_channel_id)
     var selected_bumper_group = document.getElementById("bumper_groups_dropdown_select").value
     var bumpercount = Object.keys(bumper_groups[selected_bumper_group]["bumpers"]).length
-    console.log("Found " + bumpercount + " promos in selected bumper group")
+    console.log("Found " + bumpercount + " bumpers in selected bumper group")
 
     // remove prepare button pressed styling
     for (var i = 1; i <= bumpercount; i++) {
@@ -159,7 +159,7 @@ function chbumperprep(bumper_number){ // FIX
     console.log("Bumper key : " + s3_bumper_key)
 
     channelid = live_event_map[pipSelector].primary_channel_id + ":" + live_event_map[pipSelector].channel_region
-    console.log("Submitting API Call to prepare promo now")
+    console.log("Submitting API Call to prepare bumper now")
     emlSwitchAction(s3_bumper_key, channelid, s3_bumper_bucket, "inputPrepare", "", 200, "master", "")
 
     }

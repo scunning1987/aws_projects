@@ -1,21 +1,12 @@
 {
   "channel_map": {
     "1": {
-      "primary_channel_id": 4856923,
-      "proxy_gen_channel": 4856923,
+      "primary_channel_id": 6645131,
+      "proxy_gen_channel": 1216932,
       "channel_friendly_name": "Soccer Channel 1",
       "channel_region": "us-west-2",
-      "low_latency_url_source": "wss://34.212.225.202/emx/20010",
-      "low_latency_url_medialive": "wss://34.212.225.202/eml/20010",
-      "proxy_thumbnail_name":"placeholder.jpg"
-    },
-    "2": {
-      "primary_channel_id": 1234567,
-      "proxy_gen_channel": 22333446,
-      "channel_friendly_name": "Soccer Channel 2",
-      "channel_region": "us-west-2",
-      "low_latency_url_source": "wss://34.212.225.202/emx/20020",
-      "low_latency_url_medialive": "wss://34.212.225.202/eml/20020",
+      "low_latency_url_source": "wss://internal-ec2-streamer-as-1-1667062841.us-west-2.elb.amazonaws.com/emx/20001",
+      "low_latency_url_medialive": "wss://internal-ec2-streamer-as-1-1667062841.us-west-2.elb.amazonaws.com/eml/20001",
       "proxy_thumbnail_name":"placeholder.jpg"
     }
   },
@@ -28,11 +19,11 @@
         },
         {
           "s3uri": "s3://cunsco-media/vod_slates/promo1.mp4",
-          "description": "Serie A Intro"
+          "description": "Serie A First Half"
         },
         {
           "s3uri": "s3://cunsco-media/vod_slates/promo1.mp4",
-          "description": "Serie A Intro"
+          "description": "Serie A Second Half"
         }
       ]
     },
@@ -40,11 +31,11 @@
       "bumpers": [
         {
           "s3uri": "s3://cunsco-media/vod_slates/promo1.mp4",
-          "description": "Serie A Intro"
+          "description": "Europa League Intro"
         },
         {
           "s3uri": "s3://cunsco-media/vod_slates/promo1.mp4",
-          "description": "Serie A Intro"
+          "description": "Europa League second half"
         }
       ]
     },
@@ -52,7 +43,7 @@
       "bumpers": [
         {
           "s3uri": "s3://cunsco-media/vod_slates/promo1.mp4",
-          "description": "Serie A Intro"
+          "description": "UEFA CL Bumper"
         }
       ]
     },
@@ -60,21 +51,21 @@
       "bumpers": [
         {
           "s3uri": "s3://cunsco-media/vod_slates/promo1.mp4",
-          "description": "Serie A Intro"
+          "description": "Europa CL Intro"
         },
         {
           "s3uri": "s3://cunsco-media/vod_slates/promo1.mp4",
-          "description": "Serie A Intro"
+          "description": "Europa CL Halftime"
         },
         {
           "s3uri": "s3://cunsco-media/vod_slates/promo1.mp4",
-          "description": "Serie A Intro"
+          "description": "Europe CL Outro"
         }
       ]
     }
   },
   "vod_bucket":"schedule-action-assets",
   "bumper_bucket_region": "us-west-2",
-  "control_api_endpoint_url": "https://69s54i4koc.execute-api.us-west-2.amazonaws.com/v1/dashboard-ctrl",
-  "dashboard_title":"My Streaming Dashboard"
+  "control_api_endpoint_url": "https://16bkfk4pek-vpce-0dc1f90da2dc29a8b.execute-api.us-west-2.amazonaws.com/v1/dashboard-ctrl",
+  "dashboard_title":"My Streaming Dashboard - v2"
 }
