@@ -89,7 +89,7 @@ function chvodswitch(){
 
 }
 
-function chpromoins(bumper_number){ // FIX
+function chbumperins(bumper_number){ // FIX
   console.log("Running promo insert function")
 
   if ( pipSelector == "" ) {
@@ -130,7 +130,7 @@ function chpromoins(bumper_number){ // FIX
 
 } // end chpromoins function
 
-function chpromoprep(bumper_number){ // FIX
+function chbumperprep(bumper_number){ // FIX
   console.log("Running bumper prepare function")
 
   if ( pipSelector == "" ) {
@@ -232,8 +232,8 @@ function bumperPopulator(value){
       // create buttons
       // input prepare / input switch
       for (var i = 1; i <= bumpercount; i++) {
-        document.getElementById("bumperprepare").innerHTML += '<button class="bumper_buttons bumper bumper_prepare" id="prepare'+i+'" onclick="chpromoprep('+i+')">Prepare '+i+'</button>'
-        document.getElementById("bumperinsert").innerHTML += '<button class="bumper_buttons bumper bumper_insert" id="insert'+i+'" onclick="chpromoins('+i+')">Insert '+i+'</button>'
+        document.getElementById("bumperprepare").innerHTML += '<button class="bumper_buttons bumper bumper_prepare" id="prepare'+i+'" onclick="chbumperprep('+i+')">Prepare '+i+'</button>'
+        document.getElementById("bumperinsert").innerHTML += '<button class="bumper_buttons bumper bumper_insert" id="insert'+i+'" onclick="chbumperins('+i+')">Insert '+i+'</button>'
       }
       if (pipSelector == ""){
         console.log("No Channel selected, so clearing channel information box and printing Bumper links")
