@@ -89,7 +89,7 @@ function chvodswitch(){
 
 }
 
-function chbumperins(bumper_number){ // FIX
+function chbumperins(bumper_number){
   console.log("Running promo insert function")
 
   if ( pipSelector == "" ) {
@@ -130,7 +130,7 @@ function chbumperins(bumper_number){ // FIX
 
 } // end chpromoins function
 
-function chbumperprep(bumper_number){ // FIX
+function chbumperprep(bumper_number){
   console.log("Running bumper prepare function")
 
   if ( pipSelector == "" ) {
@@ -221,6 +221,17 @@ function bumperPopulator(value){
   if ( value == "" ) {
     document.getElementById("bumperprepare").innerHTML = ""
     document.getElementById("bumperinsert").innerHTML = ""
+    if (pipSelector == ""){
+        console.log("No Channel selected, so clearing channel information box and printing Bumper links")
+        document.getElementById("channel_info").innerHTML = ""
+        document.getElementById("channel_info").innerHTML += '<h3> Bumper Videos </h3>'
+          } else {
+          document.getElementById("channel_info").innerHTML = ""
+          document.getElementById("channel_info").innerHTML = '<p> Channel Name : '+live_event_map[pipSelector].channel_friendly_name+' </p>'
+          document.getElementById("channel_info").innerHTML += '<p> Channel ID : '+live_event_map[pipSelector].primary_channel_id+' </p>'
+          document.getElementById("channel_info").innerHTML += '<p> AWS Region : '+live_event_map[pipSelector].channel_region+' </p>'
+          document.getElementById("channel_info").innerHTML += '<h3> Bumper Videos </h3>'
+      }
   }  else {
 
       console.log("Populating bumper buttons with correct object url's for group " + selected_bumper_group)
