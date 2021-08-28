@@ -86,6 +86,11 @@ def lambda_handler(event, context):
             if main_key not in main_keys:
                 return api_response(500,{"status":"malformed api body, please refer to the template"})
 
+        # check bumper groups dont exceed 5 bumpers per group
+        for bumper_group in body_json['bumper_groups']:
+            if len(body_json['bumper_groups'][bumper_group]['bumpers']) > 5:
+                return api_response(500,"Bumper groups have a limit of 5 bumpers per group")
+
         # check channel start slate references mp4 ### DEPRECATED FROM UI
         #if ".mp4" not in str(body_json['channel_start_slate']).lower():
         #    return api_response(500,{"status":"Channel start slate must reference an MP4 file"})
