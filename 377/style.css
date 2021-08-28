@@ -76,16 +76,16 @@ td{
   position: relative;
   float:left;
   margin-top:20px;
-  height: 300px;
-  width: 680px;
+  height: 320px;
+  width: 700px;
 }
 #selected_channel_info {
   float:left;
   position: relative;
   margin-top:20px;
-  height: 300px;
+  height: 320px;
   width: 680px;
-  margin: 20px 0px 0px 130px;
+  margin: 20px 0px 0px 110px;
   overflow:scroll;
   border: 1px solid #ccc;
 }
@@ -163,7 +163,7 @@ td{
   padding: 6px 12px;
   border: 1px solid #ccc;
   border-top: none;
-  height:235px;
+  height:260px;
 }
 .channel_info_text {
   padding: 10px;
@@ -181,6 +181,25 @@ td{
   font-size: 17px;
   border: 1px solid #ccc;
 }
+.bumper_buttons {
+  position:relative;
+  margin-top:10px;
+  background-color: inherit;
+  width:95px;
+  margin-bottom:10px;
+  outline: none;
+  cursor: pointer;
+  padding: 10px 20px;
+  transition: 0.3s;
+  font-size: 17px;
+  border: 1px solid #ccc;
+}
+bumper_prepare {
+  top:100px
+}
+bumper_insert {
+  top:130px
+}
 #stop {
   margin-left:10px;
 }
@@ -194,7 +213,7 @@ td{
 .pressedbutton{
   background-color:green;
 }
-.promo {
+.bumper {
   margin-left:20px;
 }
 .control_buttons:hover {

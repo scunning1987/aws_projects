@@ -19,30 +19,62 @@
       "proxy_thumbnail_name":"placeholder.jpg"
     }
   },
-  "promos": {
-    "1": {
-      "s3uri": "s3://cunsco-media/vod_slates/promo1.mp4",
-      "description": "Serie A Intro"
+  "bumper_groups": {
+    "Serie A": {
+      "bumpers": [
+        {
+          "s3uri": "s3://cunsco-media/vod_slates/promo1.mp4",
+          "description": "Serie A Intro"
+        },
+        {
+          "s3uri": "s3://cunsco-media/vod_slates/promo1.mp4",
+          "description": "Serie A Intro"
+        },
+        {
+          "s3uri": "s3://cunsco-media/vod_slates/promo1.mp4",
+          "description": "Serie A Intro"
+        }
+      ]
     },
-    "2": {
-      "s3uri": "s3://cunsco-media/vod_slates/promo1.mp4",
-      "description": "Serie A Outro"
+    "Europa League": {
+      "bumpers": [
+        {
+          "s3uri": "s3://cunsco-media/vod_slates/promo1.mp4",
+          "description": "Serie A Intro"
+        },
+        {
+          "s3uri": "s3://cunsco-media/vod_slates/promo1.mp4",
+          "description": "Serie A Intro"
+        }
+      ]
     },
-    "3": {
-      "s3uri": "s3://cunsco-media/vod_slates/promo1.mp4",
-      "description": "La Liga"
+    "UEFA Champions League": {
+      "bumpers": [
+        {
+          "s3uri": "s3://cunsco-media/vod_slates/promo1.mp4",
+          "description": "Serie A Intro"
+        }
+      ]
     },
-    "4": {
-      "s3uri": "s3://cunsco-media/vod_slates/promo1.mp4",
-      "description": "UEFA Conference"
-    },
-    "5": {
-      "s3uri": "s3://cunsco-media/vod_slates/promo1.mp4",
-      "description": "UEFA Europa"
+    "Europa Conference League": {
+      "bumpers": [
+        {
+          "s3uri": "s3://cunsco-media/vod_slates/promo1.mp4",
+          "description": "Serie A Intro"
+        },
+        {
+          "s3uri": "s3://cunsco-media/vod_slates/promo1.mp4",
+          "description": "Serie A Intro"
+        },
+        {
+          "s3uri": "s3://cunsco-media/vod_slates/promo1.mp4",
+          "description": "Serie A Intro"
+        }
+      ]
     }
   },
   "vod_bucket":"schedule-action-assets",
-  "promo_bucket_region": "us-west-2",
+  "bumper_bucket_region": "us-west-2",
   "control_api_endpoint_url": "https://69s54i4koc.execute-api.us-west-2.amazonaws.com/v1/dashboard-ctrl",
   "dashboard_title":"My Streaming Dashboard"
 }

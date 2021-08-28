@@ -31,7 +31,7 @@
                 <button class="tablinks" onclick="mediaLiveControl(event,'chstartstop')">Start/Stop</button>
                 <button class="tablinks" onclick="mediaLiveControl(event,'livestatic')">Live/Static</button>
                 <button class="tablinks" onclick="mediaLiveControl(event,'vodslate')">VOD/Slate</button>
-                <button class="tablinks" onclick="mediaLiveControl(event,'promoctrl')">Promo</button>
+                <button class="tablinks" onclick="mediaLiveControl(event,'bumper')">Bumpers</button>
             </div>
             <div id="chstartstop" class="tabcontent">
                 <h3>Individual Channel Start/Stop Control</h3>
@@ -53,19 +53,11 @@
                 <div id="vod_source_dropdown" class="dropdowns"><select id="vod_source_dropdown_select" name="vsources"></select></div>
                 <button class="control_buttons" id="vod" onclick="chvodswitch()">Switch Now</button>
             </div>
-            <div id="promoctrl" class="tabcontent">
-                <h3>Promo Insert</h3>
-                <p>Control functions to insert promo video then return to Live Stream</p>
-                <button class="control_buttons promo" id="prepare1" onclick="chpromoprep(1)">Prepare 1</button>
-                <button class="control_buttons promo" id="prepare2" onclick="chpromoprep(2)">Prepare 2</button>
-                <button class="control_buttons promo" id="prepare3" onclick="chpromoprep(3)">Prepare 3</button>
-                <button class="control_buttons promo" id="prepare4" onclick="chpromoprep(4)">Prepare 4</button>
-                <button class="control_buttons promo" id="prepare5" onclick="chpromoprep(5)">Prepare 5</button>
-                <button class="control_buttons promo" id="promo1" onclick="chpromoins(1)">Insert</br> 1</button>
-                <button class="control_buttons promo" id="promo2" onclick="chpromoins(2)">Insert</br> 2</button>
-                <button class="control_buttons promo" id="promo3" onclick="chpromoins(3)">Insert</br> 3</button>
-                <button class="control_buttons promo" id="promo4" onclick="chpromoins(4)">Insert</br> 4</button>
-                <button class="control_buttons promo" id="promo5" onclick="chpromoins(5)">Insert</br> 5</button>
+            <div id="bumper" class="tabcontent">
+                <h3>Bumpers Insert</h3>
+                <div id="bumper_groups_dropdown" class="dropdowns"><select id="bumper_groups_dropdown_select" onchange="bumperPopulator(this.value)" name="bumpersources"></select></div>
+                <div id="bumperprepare"></div>
+                <div id="bumperinsert"></div>
             </div>
         </div>
         <div id="selected_channel_info" class="common">

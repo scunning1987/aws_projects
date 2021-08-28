@@ -27,7 +27,10 @@ function mediaLiveControl(evt, controlName) {
     console.log("Selected tab is " + controlName + " need to run function to get available inputs/sources ")
     // s3 api call
     s3getObjectsAPI(bucket, apiendpointurl)
-  } else {
+  } else if (controlName == "bumper"){
+    console.log("Selected tab is " + controlName)
+
+  }  else {
     console.log("Selected tab is " + controlName)
   }
 }
@@ -86,7 +89,7 @@ function chvodswitch(){
 
 }
 
-function chpromoins(promo_number){
+function chpromoins(bumper_number){ // FIX
   console.log("Running promo insert function")
 
   if ( pipSelector == "" ) {
@@ -94,55 +97,70 @@ function chpromoins(promo_number){
     alert("Please select a channel thumbnail first!")
   } else {
     console.log("Selected Channel ID : "+live_event_map[pipSelector].primary_channel_id)
-    console.log("Found " + promosdict.length + " promos in channel map")
 
-    document.getElementById('promo'+promo_number).classList.add('pressedbutton');
-    promo_to_play = promosdict[promo_number].s3uri
-    console.log("Sending an API call to MediaLive to start promo : " + promo_to_play)
-    s3_url = new URL(promo_to_play.replace("s3://","https://"))
-    promo_bucket = s3_url.hostname
-    input = s3_url.pathname.replace(/^\/+/, '')
-    console.log("Promo bucket : " + promo_bucket)
-    console.log("Promo key : " + input)
+    var selected_bumper_group = document.getElementById("bumper_groups_dropdown_select").value
+    var bumpercount = Object.keys(bumper_groups[selected_bumper_group]["bumpers"]).length
+    console.log("Found " + bumpercount + " promos in selected bumper group")
+
+    // add pressed styling
+    document.getElementById('insert'+bumper_number).classList.add('pressedbutton');
+
+    bumper_to_play = bumper_groups[selected_bumper_group]["bumpers"][bumper_number-1]["s3uri"]
+    console.log("Sending an API call to MediaLive to prep bumper : " + bumper_to_play)
+
+    var s3_bumper_url = new URL(bumper_to_play.replace("s3://","https://"))
+    var s3_bumper_bucket = s3_bumper_url.hostname
+    var s3_bumper_key = s3_bumper_url.pathname.replace(/^\/+/, '')
+
+    console.log("Bumper bucket : " + s3_bumper_bucket)
+    console.log("Bumper key : " + s3_bumper_key)
 
     channelid = live_event_map[pipSelector].primary_channel_id + ":" + live_event_map[pipSelector].channel_region
-    console.log("Submitting API Call to insert promo now")
-    emlSwitchAction(input, channelid, promo_bucket, "immediateContinue", "", 200, "master", "")
+    console.log("Submitting API Call to prepare promo now")
+    emlSwitchAction(s3_bumper_key, channelid, s3_bumper_bucket, "immediateContinue", "", 200, "master", "")
 
     // reset styling on the pip now that the action has been performed
-    fadeAway('promo'+promo_number);
-    fadeAway('prepare1');fadeAway('prepare2');fadeAway('prepare3');fadeAway('prepare4');
+    fadeAway('insert'+bumper_number);
+
+    // remove prepare button pressed styling
+    for (var i = 1; i <= bumpercount; i++) {
+      fadeAway('prepare'+i+'')
+    }
 }
 
 } // end chpromoins function
 
-function chpromoprep(promo_number){
-  console.log("Running promo prepare function")
+function chpromoprep(bumper_number){ // FIX
+  console.log("Running bumper prepare function")
 
   if ( pipSelector == "" ) {
     console.log("Operator has not selected a channel thumbnail. Select a thumbnail first before an action can be performed")
     alert("Please select a channel thumbnail first!")
   } else {
     console.log("Selected Channel ID : "+live_event_map[pipSelector].primary_channel_id)
-    console.log("Found " + promosdict.length + " promos in channel map")
+    var selected_bumper_group = document.getElementById("bumper_groups_dropdown_select").value
+    var bumpercount = Object.keys(bumper_groups[selected_bumper_group]["bumpers"]).length
+    console.log("Found " + bumpercount + " promos in selected bumper group")
 
-    document.getElementById('prepare1').classList.remove('pressedbutton');
-    document.getElementById('prepare2').classList.remove('pressedbutton');
-    document.getElementById('prepare3').classList.remove('pressedbutton');
-    document.getElementById('prepare4').classList.remove('pressedbutton');
-    document.getElementById('prepare5').classList.remove('pressedbutton');
-    document.getElementById('prepare'+promo_number).classList.add('pressedbutton');
-    promo_to_play = promosdict[promo_number].s3uri
-    console.log("Sending an API call to MediaLive to prep promo : " + promo_to_play)
-    s3_url = new URL(promo_to_play.replace("s3://","https://"))
-    promo_bucket = s3_url.hostname
-    input = s3_url.pathname.replace(/^\/+/, '')
-    console.log("Promo bucket : " + promo_bucket)
-    console.log("Promo key : " + input)
+    // remove prepare button pressed styling
+    for (var i = 1; i <= bumpercount; i++) {
+      document.getElementById('prepare'+i+'').classList.remove('pressedbutton');
+    }
+    document.getElementById('prepare'+bumper_number).classList.add('pressedbutton');
+
+    bumper_to_play = bumper_groups[selected_bumper_group]["bumpers"][bumper_number-1]["s3uri"]
+    console.log("Sending an API call to MediaLive to prep bumper : " + bumper_to_play)
+
+    var s3_bumper_url = new URL(bumper_to_play.replace("s3://","https://"))
+    var s3_bumper_bucket = s3_bumper_url.hostname
+    var s3_bumper_key = s3_bumper_url.pathname.replace(/^\/+/, '')
+
+    console.log("Bumper bucket : " + s3_bumper_bucket)
+    console.log("Bumper key : " + s3_bumper_key)
 
     channelid = live_event_map[pipSelector].primary_channel_id + ":" + live_event_map[pipSelector].channel_region
     console.log("Submitting API Call to prepare promo now")
-    emlSwitchAction(input, channelid, promo_bucket, "inputPrepare", "", 200, "master", "")
+    emlSwitchAction(s3_bumper_key, channelid, s3_bumper_bucket, "inputPrepare", "", 200, "master", "")
 
     }
 }
@@ -175,6 +193,68 @@ function channelDropdownPopulate(){
 
 }
 
+function bumperDropdownPopulate(){
+
+  let dropdown = document.getElementById('bumper_groups_dropdown_select');
+  dropdown.length = 0;
+
+  let defaultOption = document.createElement('option');
+  defaultOption.text = 'Select A League to Load Relevant Bumpers';
+  defaultOption.value = ""
+
+  dropdown.add(defaultOption);
+  dropdown.selectedIndex = 0;
+
+  for (var bumper_group in bumper_groups){
+    option = document.createElement('option');
+    option.text = bumper_group;
+    option.value = bumper_group;
+    dropdown.add(option)
+  }
+
+}
+
+function bumperPopulator(value){
+
+  var selected_bumper_group = value
+
+  if ( value == "" ) {
+    document.getElementById("bumperprepare").innerHTML = ""
+    document.getElementById("bumperinsert").innerHTML = ""
+  }  else {
+
+      console.log("Populating bumper buttons with correct object url's for group " + selected_bumper_group)
+
+      var bumpercount = Object.keys(bumper_groups[selected_bumper_group]["bumpers"]).length
+      console.log("There are " + bumpercount + " bumpers for this selected group")
+      document.getElementById("bumperprepare").innerHTML = ""
+      document.getElementById("bumperinsert").innerHTML = ""
+      // create buttons
+      // input prepare / input switch
+      for (var i = 1; i <= bumpercount; i++) {
+        document.getElementById("bumperprepare").innerHTML += '<button class="bumper_buttons bumper bumper_prepare" id="prepare'+i+'" onclick="chpromoprep('+i+')">Prepare '+i+'</button>'
+        document.getElementById("bumperinsert").innerHTML += '<button class="bumper_buttons bumper bumper_insert" id="insert'+i+'" onclick="chpromoins('+i+')">Insert '+i+'</button>'
+      }
+      if (pipSelector == ""){
+        console.log("No Channel selected, so clearing channel information box and printing Bumper links")
+        document.getElementById("channel_info").innerHTML = ""
+        document.getElementById("channel_info").innerHTML += '<h3> Bumper Videos </h3>'
+      } else {
+      document.getElementById("channel_info").innerHTML = ""
+      document.getElementById("channel_info").innerHTML = '<p> Channel Name : '+live_event_map[pipSelector].channel_friendly_name+' </p>'
+      document.getElementById("channel_info").innerHTML += '<p> Channel ID : '+live_event_map[pipSelector].primary_channel_id+' </p>'
+      document.getElementById("channel_info").innerHTML += '<p> AWS Region : '+live_event_map[pipSelector].channel_region+' </p>'
+      document.getElementById("channel_info").innerHTML += '<h3> Bumper Videos </h3>'
+      }
+
+      for (var i = 1; i <= bumpercount; i++) {
+        base0i = i - 1
+        document.getElementById("channel_info").innerHTML += '<a href="#" onclick="inputPreview('+base0i+')" id="bumper'+i+'link">Bumper '+i+' : '+bumper_groups[selected_bumper_group]["bumpers"][base0i]["description"]+'</a></br>'
+      }
+  }
+
+}
+
 var sldpPlayers = [];
 
 //document.getElementById("channel_selector").onclick = function () {
@@ -194,14 +274,20 @@ document.getElementById("channel_selector").addEventListener('change', (event) =
   document.getElementById("channel_info").innerHTML += '<p> Channel ID : '+live_event_map[pipSelector].primary_channel_id+' </p>'
   document.getElementById("channel_info").innerHTML += '<p> AWS Region : '+live_event_map[pipSelector].channel_region+' </p>'
 
-  // promosdict."1".description
-  document.getElementById("channel_info").innerHTML += '<h3> Promo Videos </h3>'
-  document.getElementById("channel_info").innerHTML += '<a href="#" onclick="inputPreview(1)" id="promo1link">Promo 1 : '+promosdict["1"].description+'</a></br>'
-  document.getElementById("channel_info").innerHTML += '<a href="#" onclick="inputPreview(2)" id="promo2link">Promo 2 : '+promosdict["2"].description+'</a></br>'
-  document.getElementById("channel_info").innerHTML += '<a href="#" onclick="inputPreview(3)" id="promo3link">Promo 3 : '+promosdict["3"].description+'</a></br>'
-  document.getElementById("channel_info").innerHTML += '<a href="#" onclick="inputPreview(4)" id="promo4link">Promo 4 : '+promosdict["4"].description+'</a></br>'
-  document.getElementById("channel_info").innerHTML += '<a href="#" onclick="inputPreview(5)" id="promo5link">Promo 5 : '+promosdict["5"].description+'</a>'
-
+  // Bumper Videos Links
+  document.getElementById("channel_info").innerHTML += '<h3> Bumper Videos </h3>'
+  if ( document.getElementById("bumper_groups_dropdown_select").value == "" ) {
+    console.log("No bumper group has been selected from the dropdown menu, nothing to show")
+  } else {
+  console.log("printing S3 links for Bumper videos")
+  var selected_bumper_group = document.getElementById("bumper_groups_dropdown_select").value
+  var bumpercount = Object.keys(bumper_groups[selected_bumper_group]["bumpers"]).length
+  for (var i = 1; i <= bumpercount; i++) {
+      console.log("selected bumper group is : "+ selected_bumper_group)
+      base0i = i - 1
+      document.getElementById("channel_info").innerHTML += '<a href="#" onclick="inputPreview('+base0i+')" id="bumper'+i+'link">Bumper '+i+' : '+bumper_groups[selected_bumper_group]["bumpers"][base0i]["description"]+'</a></br>'
+    }
+  }
 
   /*
   for (s3_promo in live_event_map[pipSelector].promos){
@@ -269,16 +355,17 @@ document.getElementById("channel_selector").addEventListener('change', (event) =
   startPlayers()
 });
 
-function inputPreview(promo_number){
-  console.log("Going to create presign url for Promo " + promo_number)
-  promo_s3uri = promosdict[promo_number].s3uri
-  console.log("Promo S3 URI: " + promo_s3uri)
+function inputPreview(bumper_number){
+  console.log("Going to create presign url for Bumper " + bumper_number)
+  var selected_bumper_group = document.getElementById("bumper_groups_dropdown_select").value
+  bumper_s3uri = bumper_groups[selected_bumper_group]["bumpers"][bumper_number]["s3uri"]
+  console.log("Promo S3 URI: " + bumper_s3uri)
 
-  var s3_promo_url = new URL(promo_s3uri.replace("s3://","https://"))
-  var s3_promo_bucket = s3_promo_url.hostname
-  var s3_promo_key = s3_promo_url.pathname.replace(/^\/+/, '')
+  var s3_bumper_url = new URL(bumper_s3uri.replace("s3://","https://"))
+  var s3_bumper_bucket = s3_bumper_url.hostname
+  var s3_bumper_key = s3_bumper_url.pathname.replace(/^\/+/, '')
 
-  var presign_url = presignGenerator(s3_promo_bucket,s3_promo_key);
+  var presign_url = presignGenerator(s3_bumper_bucket,s3_bumper_key);
   console.log("opening s3 URL: " + presign_url)
   window.open(presign_url,'_blank')
 
@@ -308,9 +395,11 @@ function pageLoadFunction(){
     }
 
 
-
+  // Populate the static dropdown elements with data obtained from the channel map json
   channelDropdownPopulate()
+  bumperDropdownPopulate()
 
+  // set channel selector
   pipSelector = ""
 
 }
@@ -349,13 +438,12 @@ function getConfig(){
     const jdata = JSON.parse(request.responseText);
     console.log(jdata)
     window.live_event_map = jdata.channel_map
-    //window.channel_start_slate = jdata.channel_start_slate // deprecated in this ui version
     window.deployment_name = jdata.dashboard_title
     window.bucket = jdata.vod_bucket
-    window.promo_bucket_region = jdata.promo_bucket_region
+    window.bumper_bucket_region = jdata.bumper_bucket_region
     window.apiendpointurl = jdata.control_api_endpoint_url
     window.apiendpointhost = jdata.control_api_endpoint_host_header
-    window.promosdict = jdata.promos
+    window.bumper_groups = jdata.bumper_groups
     json_data = request.responseText
      } else {
     // Reached the server, but it returned an error
