@@ -210,7 +210,7 @@ def lambda_handler(event, context):
         timestring = time.strftime('%Y-%m-%dT%H%M%SZ')
         actionname = inputfile.rsplit('/', 1)[-1][0:30] + "_" + str(random.randint(100,999)) + "_" + timestring
         inputurl = bucket + "/" + str(inputfile)
-
+        print("action type is : %s " %(type))
         if type == "immediate-continue" or type == "input-prepare":
             # Find a CONTINUE dynamic file (For promo / play once functionality)
             for input in input_attachments:
@@ -231,18 +231,18 @@ def lambda_handler(event, context):
             for input in input_attachments:
                 if input['InputId'] == live_input_id:
                     inputattachref = input['InputAttachmentName']
-        elif type == "follow-live":
-            inputattachref = inputfile
-        else:
+
+        if type == "immediate":
             # Find a LOOP attached dynamic file (For Slate loop functionality)
 
             for input in input_attachments:
-                if input['InputSettings']['SourceEndBehavior'] == "CONTINUE":
+                if input['InputSettings']['SourceEndBehavior'] == "LOOP":
                     for fileinput in inputs['file']:
                         if input['InputId'] == fileinput['id']:
                             inputattachref = input['InputAttachmentName']
 
         if type == "immediate" or type == "immediate-continue":
+
             try:
                 response = client.batch_update_schedule(
                     ChannelId=channelid,
