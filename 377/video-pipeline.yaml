@@ -442,8 +442,8 @@ Resources:
                 GopSize: 60
                 GopSizeUnits: FRAMES
                 SubgopLength: DYNAMIC
-                ScanType: PROGRESSIVE
-                Level: H264_LEVEL_4_1
+                ScanType: INTERLACED
+                Level: H264_LEVEL_AUTO
                 LookAheadRateControl: MEDIUM
                 NumRefFrames: 1
                 ParControl: SPECIFIED
