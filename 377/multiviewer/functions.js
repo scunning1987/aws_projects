@@ -223,8 +223,15 @@ function chbumperprep(bumper_number){
 
 var fadeAway = function(buttonid) {
   setTimeout(function(){
+
+  if ( buttonid == "insertconfirmmessage" ){
+    document.getElementById("insertconfirmmessage").display = "none";
+    document.getElementById("insertconfirmmessage").innerHTML = "";
+    console.log("hiding the button press message")
+  } else {
   document.getElementById(buttonid).classList.remove('pressedbutton');
- }, 2000);
+  }
+ }, 4000);
 }
 
 function bumperDropdownPopulate(){
@@ -804,7 +811,10 @@ function emlSwitchAction(file, channelid, bucket, takeType, follow, maxresults, 
     putReq.open("PUT", url, false);
     putReq.setRequestHeader("Accept","*/*");
     putReq.send();
-    alert("Command Executed Successfully")
+    var timenow = new Date().toTimeString()
+    document.getElementById("insertconfirmmessage").display = 'block'
+    document.getElementById("insertconfirmmessage").innerHTML = '<h4 style="color:red">Command executed: '+timenow+'</h4>'
+    fadeAway("insertconfirmmessage")
 }
 
 /// EML SWITCH - END

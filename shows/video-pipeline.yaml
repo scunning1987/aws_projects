@@ -1,0 +1,1593 @@
+AWSTemplateFormatVersion: "2010-09-09"
+# Transform: Count
+
+Parameters:
+
+  Prefix:
+    Type: String
+    Default: tradeshow
+    AllowedPattern: ^[a-zA-Z][a-zA-Z0-9]*
+    Description: Prefix to append to all Names Created ; expected value example "TieLine002"
+
+  AZ1:
+    Type: AWS::EC2::AvailabilityZone::Name
+    Default: us-west-2a
+    Description: Target AZ for first HA deployment - IMPORTANT this MUST match the target Subnet for SUBNET1a-b
+
+  Subnet1:
+    Type: AWS::EC2::Subnet::Id
+    Default: subnet-88801af0
+    Description: Subnet(s) to deploy API Gateway Interface endpoint, This MUST match the target for AZ1 and should be private
+
+  AZ2:
+    Type: AWS::EC2::AvailabilityZone::Name
+    Default: us-west-2b
+    Description: WILL NOT BE USED - See email confluence docs for details - Target AZ for second HA deployment - IMPORTANT this MUST match the target Subnet for SUBNET2a-b
+
+  Subnet2:
+    Type: AWS::EC2::Subnet::Id
+    Default: subnet-e23bbfa8
+    Description: Subnet(s) to deploy API Gateway Interface endpoint, This MUST match the target for AZ2 and should be private
+
+  IAMRoleForMediaLive:
+    Type: String
+    Default: MediaLiveAccessRole
+    Description: Target Role to assign to MediaLive
+
+
+  MediaLiveSGs:
+    Type: List<AWS::EC2::SecurityGroup::Id>
+    Description: Target SGs to apply to MediaLive Inputs
+
+  ThumbnailBucket:
+    Type: String
+    Default: demo-control-interface-s3bucket-1nzldmlhysr2l
+    Description: Please enter the S3 bucket name that MediaLive will output its JPEG outputs to. This S3 Bucket MUST be the bucket deployed by the operator dashboard CloudFormation Template
+
+  EC2StreamerA:
+    Type: String
+    Description: Enter the Local IP address of the EC2 streamer in the first/primary AZ
+    Default: 172.31.18.47
+
+  EC2StreamerB:
+    Type: String
+    Description: Enter the Local IP address of the EC2 streamer in the second/secondary AZ
+    Default: 172.31.46.197
+
+Resources:
+###
+### MediaLive
+###
+
+  MLSecGroup:
+    Type: AWS::MediaLive::InputSecurityGroup
+    Properties:
+      WhitelistRules:
+        - Cidr: 0.0.0.0/0
+
+  LiveML1a:
+    Type: AWS::MediaLive::Input
+    Properties:
+      Name: !Sub "${Prefix}-live-1a"
+      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      Type: RTP_PUSH
+      InputSecurityGroups:
+        - !Ref MLSecGroup
+
+  LiveML1b:
+    Type: AWS::MediaLive::Input
+    Properties:
+      Name: !Sub "${Prefix}-live-1b"
+      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      Type: RTP_PUSH
+      InputSecurityGroups:
+        - !Ref MLSecGroup
+
+  MP4LML1a:
+    Type: AWS::MediaLive::Input
+    Properties:
+      Name: !Sub "${Prefix}-mp4l-1a"
+      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      Type: MP4_FILE
+      Sources:
+        - Url: s3://$urlPath$
+
+  MP4LML1b:
+    Type: AWS::MediaLive::Input
+    Properties:
+      Name: !Sub "${Prefix}-mp4l-1b"
+      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      Type: MP4_FILE
+      Sources:
+        - Url: s3://$urlPath$
+
+  MP4CML1a:
+    Type: AWS::MediaLive::Input
+    Properties:
+      Name: !Sub "${Prefix}-mp4c-1a"
+      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      Type: MP4_FILE
+      Sources:
+        - Url: s3://$urlPath$
+
+  MP4CML1b:
+    Type: AWS::MediaLive::Input
+    Properties:
+      Name: !Sub "${Prefix}-mp4c-1b"
+      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      Type: MP4_FILE
+      Sources:
+        - Url: s3://$urlPath$
+
+
+  LiveML2a:
+    Type: AWS::MediaLive::Input
+    Properties:
+      Name: !Sub "${Prefix}-live-1a"
+      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      Type: RTP_PUSH
+      InputSecurityGroups:
+        - !Ref MLSecGroup
+
+  LiveML2b:
+    Type: AWS::MediaLive::Input
+    Properties:
+      Name: !Sub "${Prefix}-live-1b"
+      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      Type: RTP_PUSH
+      InputSecurityGroups:
+        - !Ref MLSecGroup
+
+  MP4LML2a:
+    Type: AWS::MediaLive::Input
+    Properties:
+      Name: !Sub "${Prefix}-mp4l-1a"
+      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      Type: MP4_FILE
+      Sources:
+        - Url: s3://$urlPath$
+
+  MP4LML2b:
+    Type: AWS::MediaLive::Input
+    Properties:
+      Name: !Sub "${Prefix}-mp4l-1b"
+      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      Type: MP4_FILE
+      Sources:
+        - Url: s3://$urlPath$
+
+  MP4CML2a:
+    Type: AWS::MediaLive::Input
+    Properties:
+      Name: !Sub "${Prefix}-mp4c-1a"
+      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      Type: MP4_FILE
+      Sources:
+        - Url: s3://$urlPath$
+
+  MP4CML2b:
+    Type: AWS::MediaLive::Input
+    Properties:
+      Name: !Sub "${Prefix}-mp4c-1b"
+      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      Type: MP4_FILE
+      Sources:
+        - Url: s3://$urlPath$
+
+  LiveML3a:
+    Type: AWS::MediaLive::Input
+    Properties:
+      Name: !Sub "${Prefix}-live-1a"
+      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      Type: RTP_PUSH
+      InputSecurityGroups:
+        - !Ref MLSecGroup
+
+  LiveML3b:
+    Type: AWS::MediaLive::Input
+    Properties:
+      Name: !Sub "${Prefix}-live-1b"
+      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      Type: RTP_PUSH
+      InputSecurityGroups:
+        - !Ref MLSecGroup
+
+  MP4LML3a:
+    Type: AWS::MediaLive::Input
+    Properties:
+      Name: !Sub "${Prefix}-mp4l-1a"
+      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      Type: MP4_FILE
+      Sources:
+        - Url: s3://$urlPath$
+
+  MP4LML3b:
+    Type: AWS::MediaLive::Input
+    Properties:
+      Name: !Sub "${Prefix}-mp4l-1b"
+      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      Type: MP4_FILE
+      Sources:
+        - Url: s3://$urlPath$
+
+  MP4CML3a:
+    Type: AWS::MediaLive::Input
+    Properties:
+      Name: !Sub "${Prefix}-mp4c-1a"
+      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      Type: MP4_FILE
+      Sources:
+        - Url: s3://$urlPath$
+
+  MP4CML3b:
+    Type: AWS::MediaLive::Input
+    Properties:
+      Name: !Sub "${Prefix}-mp4c-1b"
+      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      Type: MP4_FILE
+      Sources:
+        - Url: s3://$urlPath$
+
+  LiveML4a:
+    Type: AWS::MediaLive::Input
+    Properties:
+      Name: !Sub "${Prefix}-live-1a"
+      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      Type: RTP_PUSH
+      InputSecurityGroups:
+        - !Ref MLSecGroup
+
+  LiveML4b:
+    Type: AWS::MediaLive::Input
+    Properties:
+      Name: !Sub "${Prefix}-live-1b"
+      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      Type: RTP_PUSH
+      InputSecurityGroups:
+        - !Ref MLSecGroup
+
+  MP4LML4a:
+    Type: AWS::MediaLive::Input
+    Properties:
+      Name: !Sub "${Prefix}-mp4l-1a"
+      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      Type: MP4_FILE
+      Sources:
+        - Url: s3://$urlPath$
+
+  MP4LML4b:
+    Type: AWS::MediaLive::Input
+    Properties:
+      Name: !Sub "${Prefix}-mp4l-1b"
+      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      Type: MP4_FILE
+      Sources:
+        - Url: s3://$urlPath$
+
+  MP4CML4a:
+    Type: AWS::MediaLive::Input
+    Properties:
+      Name: !Sub "${Prefix}-mp4c-1a"
+      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      Type: MP4_FILE
+      Sources:
+        - Url: s3://$urlPath$
+
+  MP4CML4b:
+    Type: AWS::MediaLive::Input
+    Properties:
+      Name: !Sub "${Prefix}-mp4c-1b"
+      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      Type: MP4_FILE
+      Sources:
+        - Url: s3://$urlPath$
+
+  EML1a:
+    Type: 'AWS::MediaLive::Channel'
+    Properties:
+      Name: !Sub ${Prefix}-ch-1a
+      ChannelClass: SINGLE_PIPELINE
+      InputSpecification:
+        Codec: AVC
+        MaximumBitrate: MAX_20_MBPS
+        Resolution: HD
+      LogLevel: DISABLED
+      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      Vpc:
+        SecurityGroupIds: !Ref MediaLiveSGs
+        SubnetIds:
+        - !Ref Subnet1
+      InputAttachments:
+        - InputId: !Ref LiveML1a
+          InputAttachmentName: MainStream
+          InputSettings:
+            SourceEndBehavior: CONTINUE
+            AudioSelectors:
+              - Name: ap1
+                SelectorSettings:
+                  AudioTrackSelection:
+                    Tracks:
+                      - Track: 1
+        - InputId: !Ref MP4LML1a
+          InputAttachmentName: LoopMP4
+          InputSettings:
+            SourceEndBehavior: LOOP
+            AudioSelectors:
+              - Name: ap1
+                SelectorSettings:
+                  AudioTrackSelection:
+                    Tracks:
+                      - Track: 1
+        - InputId: !Ref MP4CML1a
+          InputAttachmentName: ContinueMP4
+          InputSettings:
+            SourceEndBehavior: CONTINUE
+            AudioSelectors:
+              - Name: ap1
+                SelectorSettings:
+                  AudioTrackSelection:
+                    Tracks:
+                      - Track: 1
+      Destinations:
+        - Id: udp1
+          Settings:
+            - Url: !Sub "rtp://${EC2StreamerA}:20010"
+        - Id: jpgoutputs3
+          Settings:
+            - Url: !Sub "s3://${ThumbnailBucket}/status_thumbnails/${Prefix}-1a"
+      EncoderSettings:
+        FeatureActivations:
+          InputPrepareScheduleActions: ENABLED
+        MotionGraphicsConfiguration:
+          MotionGraphicsInsertion: ENABLED
+          MotionGraphicsSettings:
+            HtmlMotionGraphicsSettings: {}
+        AudioDescriptions:
+          - Name: audio_0
+            AudioSelectorName: ap1
+            AudioTypeControl: FOLLOW_INPUT
+            LanguageCodeControl: FOLLOW_INPUT
+            CodecSettings:
+              AacSettings:
+                InputType: NORMAL
+                Bitrate: 128000
+                CodingMode: CODING_MODE_2_0
+                RawFormat: NONE
+                Spec: MPEG4
+                Profile: LC
+                RateControlMode: CBR
+                SampleRate: 48000
+        VideoDescriptions:
+          - CodecSettings:
+              H264Settings:
+                AfdSignaling: NONE
+                ColorMetadata: INSERT
+                AdaptiveQuantization: LOW
+                Bitrate: 750000
+                EntropyEncoding: CABAC
+                FlickerAq: DISABLED
+                ForceFieldPictures: DISABLED
+                FramerateControl: SPECIFIED
+                FramerateNumerator: 30001
+                FramerateDenominator: 1001
+                GopBReference: ENABLED
+                GopClosedCadence: 1
+                GopNumBFrames: 2
+                GopSize: 60
+                GopSizeUnits: FRAMES
+                SubgopLength: DYNAMIC
+                ScanType: PROGRESSIVE
+                Level: H264_LEVEL_AUTO
+                LookAheadRateControl: MEDIUM
+                NumRefFrames: 1
+                ParControl: SPECIFIED
+                ParNumerator: 1
+                ParDenominator: 1
+                Profile: MAIN
+                RateControlMode: CBR
+                Syntax: DEFAULT
+                SceneChangeDetect: ENABLED
+                Slices: 4
+                SpatialAq: ENABLED
+                TemporalAq: ENABLED
+                TimecodeInsertion: DISABLED
+                QualityLevel: STANDARD_QUALITY
+            Height: 360
+            Name: rtp-proxy
+            RespondToAfd: NONE
+            Sharpness: 50
+            ScalingBehavior: DEFAULT
+            Width: 640
+          - CodecSettings:
+              FrameCaptureSettings:
+                CaptureInterval: 2
+                CaptureIntervalUnits: SECONDS
+            Height: 360
+            Width: 640
+            Name: jpg-output-video
+        CaptionDescriptions: []
+        OutputGroups:
+          - Name: frame-capture
+            OutputGroupSettings:
+              FrameCaptureGroupSettings:
+                Destination:
+                  DestinationRefId: jpgoutputs3
+            Outputs:
+              - OutputName: jpg-output
+                VideoDescriptionName: jpg-output-video
+                OutputSettings:
+                  FrameCaptureOutputSettings:
+                    NameModifier: ""
+          - Name: rtp
+            OutputGroupSettings:
+              UdpGroupSettings:
+                InputLossAction: EMIT_PROGRAM
+            Outputs:
+              - OutputName: rtp-proxy
+                VideoDescriptionName: rtp-proxy
+                AudioDescriptionNames:
+                  - audio_0
+                CaptionDescriptionNames: []
+                OutputSettings:
+                  UdpOutputSettings:
+                    BufferMsec: 100
+                    Destination:
+                      DestinationRefId: udp1
+                    FecOutputSettings:
+                      IncludeFec: COLUMN_AND_ROW
+                      ColumnDepth: 10
+                      RowLength: 10
+                    ContainerSettings:
+                      M2tsSettings:
+                        Bitrate: 0                        
+        TimecodeConfig:
+          Source: EMBEDDED
+      Tags:
+        MediaLive-Workflow: test
+
+
+  EML1b:
+    Type: 'AWS::MediaLive::Channel'
+    Properties:
+      Name: !Sub ${Prefix}-ch-1b
+      ChannelClass: SINGLE_PIPELINE
+      InputSpecification:
+        Codec: AVC
+        MaximumBitrate: MAX_20_MBPS
+        Resolution: HD
+      LogLevel: DISABLED
+      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      Vpc:
+        SecurityGroupIds: !Ref MediaLiveSGs
+        SubnetIds:
+          - !Ref Subnet2
+      InputAttachments:
+        - InputId: !Ref LiveML1b
+          InputAttachmentName: MainStream
+          InputSettings:
+            SourceEndBehavior: CONTINUE
+            AudioSelectors:
+              - Name: ap1
+                SelectorSettings:
+                  AudioTrackSelection:
+                    Tracks:
+                      - Track: 1
+        - InputId: !Ref MP4LML1b
+          InputAttachmentName: LoopMP4
+          InputSettings:
+            SourceEndBehavior: LOOP
+            AudioSelectors:
+              - Name: ap1
+                SelectorSettings:
+                  AudioTrackSelection:
+                    Tracks:
+                      - Track: 1
+        - InputId: !Ref MP4CML1b
+          InputAttachmentName: ContinueMP4
+          InputSettings:
+            SourceEndBehavior: CONTINUE
+            AudioSelectors:
+              - Name: ap1
+                SelectorSettings:
+                  AudioTrackSelection:
+                    Tracks:
+                      - Track: 1
+      Destinations:
+        - Id: udp1
+          Settings:
+            - Url: !Sub "rtp://${EC2StreamerA}:21010"
+        - Id: jpgoutputs3
+          Settings:
+            - Url: !Sub "s3://${ThumbnailBucket}/status_thumbnails/${Prefix}-1b"
+      EncoderSettings:
+        FeatureActivations:
+          InputPrepareScheduleActions: ENABLED
+        MotionGraphicsConfiguration:
+          MotionGraphicsInsertion: ENABLED
+          MotionGraphicsSettings:
+            HtmlMotionGraphicsSettings: {}
+        AudioDescriptions:
+          - Name: audio_0
+            AudioSelectorName: ap1
+            AudioTypeControl: FOLLOW_INPUT
+            LanguageCodeControl: FOLLOW_INPUT
+            CodecSettings:
+              AacSettings:
+                InputType: NORMAL
+                Bitrate: 128000
+                CodingMode: CODING_MODE_2_0
+                RawFormat: NONE
+                Spec: MPEG4
+                Profile: LC
+                RateControlMode: CBR
+                SampleRate: 48000
+        VideoDescriptions:
+          - CodecSettings:
+              H264Settings:
+                AfdSignaling: NONE
+                ColorMetadata: INSERT
+                AdaptiveQuantization: LOW
+                Bitrate: 750000
+                EntropyEncoding: CABAC
+                FlickerAq: DISABLED
+                ForceFieldPictures: DISABLED
+                FramerateControl: SPECIFIED
+                FramerateNumerator: 30001
+                FramerateDenominator: 1001
+                GopBReference: ENABLED
+                GopClosedCadence: 1
+                GopNumBFrames: 2
+                GopSize: 60
+                GopSizeUnits: FRAMES
+                SubgopLength: DYNAMIC
+                ScanType: PROGRESSIVE
+                Level: H264_LEVEL_AUTO
+                LookAheadRateControl: MEDIUM
+                NumRefFrames: 1
+                ParControl: SPECIFIED
+                ParNumerator: 1
+                ParDenominator: 1
+                Profile: MAIN
+                RateControlMode: CBR
+                Syntax: DEFAULT
+                SceneChangeDetect: ENABLED
+                Slices: 4
+                SpatialAq: ENABLED
+                TemporalAq: ENABLED
+                TimecodeInsertion: DISABLED
+                QualityLevel: STANDARD_QUALITY
+            Height: 360
+            Name: rtp-proxy
+            RespondToAfd: NONE
+            Sharpness: 50
+            ScalingBehavior: DEFAULT
+            Width: 640
+          - CodecSettings:
+              FrameCaptureSettings:
+                CaptureInterval: 2
+                CaptureIntervalUnits: SECONDS
+            Height: 360
+            Width: 640
+            Name: jpg-output-video
+        CaptionDescriptions: []
+        OutputGroups:
+          - Name: frame-capture
+            OutputGroupSettings:
+              FrameCaptureGroupSettings:
+                Destination:
+                  DestinationRefId: jpgoutputs3
+            Outputs:
+              - OutputName: jpg-output
+                VideoDescriptionName: jpg-output-video
+                OutputSettings:
+                  FrameCaptureOutputSettings:
+                    NameModifier: ""
+          - Name: rtp
+            OutputGroupSettings:
+              UdpGroupSettings:
+                InputLossAction: EMIT_PROGRAM
+            Outputs:
+              - OutputName: rtp-proxy
+                VideoDescriptionName: rtp-proxy
+                AudioDescriptionNames:
+                  - audio_0
+                CaptionDescriptionNames: []
+                OutputSettings:
+                  UdpOutputSettings:
+                    BufferMsec: 100
+                    Destination:
+                      DestinationRefId: udp1
+                    FecOutputSettings:
+                      IncludeFec: COLUMN_AND_ROW
+                      ColumnDepth: 10
+                      RowLength: 10
+                    ContainerSettings:
+                      M2tsSettings:
+                        Bitrate: 0
+        TimecodeConfig:
+          Source: EMBEDDED
+      Tags:
+        MediaLive-Workflow: test
+
+
+  EML2a:
+    Type: 'AWS::MediaLive::Channel'
+    Properties:
+      Name: !Sub ${Prefix}-ch-2a
+      ChannelClass: SINGLE_PIPELINE
+      InputSpecification:
+        Codec: AVC
+        MaximumBitrate: MAX_20_MBPS
+        Resolution: HD
+      LogLevel: DISABLED
+      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      Vpc:
+        SecurityGroupIds: !Ref MediaLiveSGs
+        SubnetIds:
+          - !Ref Subnet1
+      InputAttachments:
+        - InputId: !Ref LiveML2a
+          InputAttachmentName: MainStream
+          InputSettings:
+            SourceEndBehavior: CONTINUE
+            AudioSelectors:
+              - Name: ap1
+                SelectorSettings:
+                  AudioTrackSelection:
+                    Tracks:
+                      - Track: 1
+        - InputId: !Ref MP4LML2a
+          InputAttachmentName: LoopMP4
+          InputSettings:
+            SourceEndBehavior: LOOP
+            AudioSelectors:
+              - Name: ap1
+                SelectorSettings:
+                  AudioTrackSelection:
+                    Tracks:
+                      - Track: 1
+        - InputId: !Ref MP4CML2a
+          InputAttachmentName: ContinueMP4
+          InputSettings:
+            SourceEndBehavior: CONTINUE
+            AudioSelectors:
+              - Name: ap1
+                SelectorSettings:
+                  AudioTrackSelection:
+                    Tracks:
+                      - Track: 1
+      Destinations:
+        - Id: udp1
+          Settings:
+            - Url: !Sub "rtp://${EC2StreamerA}:20020"
+        - Id: jpgoutputs3
+          Settings:
+            - Url: !Sub "s3://${ThumbnailBucket}/status_thumbnails/${Prefix}-2a"
+      EncoderSettings:
+        FeatureActivations:
+          InputPrepareScheduleActions: ENABLED
+        MotionGraphicsConfiguration:
+          MotionGraphicsInsertion: ENABLED
+          MotionGraphicsSettings:
+            HtmlMotionGraphicsSettings: {}
+        AudioDescriptions:
+          - Name: audio_0
+            AudioSelectorName: ap1
+            AudioTypeControl: FOLLOW_INPUT
+            LanguageCodeControl: FOLLOW_INPUT
+            CodecSettings:
+              AacSettings:
+                InputType: NORMAL
+                Bitrate: 128000
+                CodingMode: CODING_MODE_2_0
+                RawFormat: NONE
+                Spec: MPEG4
+                Profile: LC
+                RateControlMode: CBR
+                SampleRate: 48000
+        VideoDescriptions:
+          - CodecSettings:
+              H264Settings:
+                AfdSignaling: NONE
+                ColorMetadata: INSERT
+                AdaptiveQuantization: LOW
+                Bitrate: 750000
+                EntropyEncoding: CABAC
+                FlickerAq: DISABLED
+                ForceFieldPictures: DISABLED
+                FramerateControl: SPECIFIED
+                FramerateNumerator: 30001
+                FramerateDenominator: 1001
+                GopBReference: ENABLED
+                GopClosedCadence: 1
+                GopNumBFrames: 2
+                GopSize: 60
+                GopSizeUnits: FRAMES
+                SubgopLength: DYNAMIC
+                ScanType: PROGRESSIVE
+                Level: H264_LEVEL_AUTO
+                LookAheadRateControl: MEDIUM
+                NumRefFrames: 1
+                ParControl: SPECIFIED
+                ParNumerator: 1
+                ParDenominator: 1
+                Profile: MAIN
+                RateControlMode: CBR
+                Syntax: DEFAULT
+                SceneChangeDetect: ENABLED
+                Slices: 4
+                SpatialAq: ENABLED
+                TemporalAq: ENABLED
+                TimecodeInsertion: DISABLED
+                QualityLevel: STANDARD_QUALITY
+            Height: 360
+            Name: rtp-proxy
+            RespondToAfd: NONE
+            Sharpness: 50
+            ScalingBehavior: DEFAULT
+            Width: 640
+          - CodecSettings:
+              FrameCaptureSettings:
+                CaptureInterval: 2
+                CaptureIntervalUnits: SECONDS
+            Height: 360
+            Width: 640
+            Name: jpg-output-video
+        CaptionDescriptions: []
+        OutputGroups:
+          - Name: frame-capture
+            OutputGroupSettings:
+              FrameCaptureGroupSettings:
+                Destination:
+                  DestinationRefId: jpgoutputs3
+            Outputs:
+              - OutputName: jpg-output
+                VideoDescriptionName: jpg-output-video
+                OutputSettings:
+                  FrameCaptureOutputSettings:
+                    NameModifier: ""
+          - Name: rtp
+            OutputGroupSettings:
+              UdpGroupSettings:
+                InputLossAction: EMIT_PROGRAM
+            Outputs:
+              - OutputName: rtp-proxy
+                VideoDescriptionName: rtp-proxy
+                AudioDescriptionNames:
+                  - audio_0
+                CaptionDescriptionNames: []
+                OutputSettings:
+                  UdpOutputSettings:
+                    BufferMsec: 100
+                    Destination:
+                      DestinationRefId: udp1
+                    FecOutputSettings:
+                      IncludeFec: COLUMN_AND_ROW
+                      ColumnDepth: 10
+                      RowLength: 10
+                    ContainerSettings:
+                      M2tsSettings:
+                        Bitrate: 0
+        TimecodeConfig:
+          Source: EMBEDDED
+      Tags:
+        MediaLive-Workflow: test
+
+
+  EML2b:
+    Type: 'AWS::MediaLive::Channel'
+    Properties:
+      Name: !Sub ${Prefix}-ch-2b
+      ChannelClass: SINGLE_PIPELINE
+      InputSpecification:
+        Codec: AVC
+        MaximumBitrate: MAX_20_MBPS
+        Resolution: HD
+      LogLevel: DISABLED
+      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      Vpc:
+        SecurityGroupIds: !Ref MediaLiveSGs
+        SubnetIds:
+          - !Ref Subnet2
+      InputAttachments:
+        - InputId: !Ref LiveML2b
+          InputAttachmentName: MainStream
+          InputSettings:
+            SourceEndBehavior: CONTINUE
+            AudioSelectors:
+              - Name: ap1
+                SelectorSettings:
+                  AudioTrackSelection:
+                    Tracks:
+                      - Track: 1
+        - InputId: !Ref MP4LML2b
+          InputAttachmentName: LoopMP4
+          InputSettings:
+            SourceEndBehavior: LOOP
+            AudioSelectors:
+              - Name: ap1
+                SelectorSettings:
+                  AudioTrackSelection:
+                    Tracks:
+                      - Track: 1
+        - InputId: !Ref MP4CML2b
+          InputAttachmentName: ContinueMP4
+          InputSettings:
+            SourceEndBehavior: CONTINUE
+            AudioSelectors:
+              - Name: ap1
+                SelectorSettings:
+                  AudioTrackSelection:
+                    Tracks:
+                      - Track: 1
+      Destinations:
+        - Id: udp1
+          Settings:
+            - Url: !Sub "rtp://${EC2StreamerA}:21020"
+        - Id: jpgoutputs3
+          Settings:
+            - Url: !Sub "s3://${ThumbnailBucket}/status_thumbnails/${Prefix}-2b"
+      EncoderSettings:
+        FeatureActivations:
+          InputPrepareScheduleActions: ENABLED
+        MotionGraphicsConfiguration:
+          MotionGraphicsInsertion: ENABLED
+          MotionGraphicsSettings:
+            HtmlMotionGraphicsSettings: {}
+        AudioDescriptions:
+          - Name: audio_0
+            AudioSelectorName: ap1
+            AudioTypeControl: FOLLOW_INPUT
+            LanguageCodeControl: FOLLOW_INPUT
+            CodecSettings:
+              AacSettings:
+                InputType: NORMAL
+                Bitrate: 128000
+                CodingMode: CODING_MODE_2_0
+                RawFormat: NONE
+                Spec: MPEG4
+                Profile: LC
+                RateControlMode: CBR
+                SampleRate: 48000
+        VideoDescriptions:
+          - CodecSettings:
+              H264Settings:
+                AfdSignaling: NONE
+                ColorMetadata: INSERT
+                AdaptiveQuantization: LOW
+                Bitrate: 750000
+                EntropyEncoding: CABAC
+                FlickerAq: DISABLED
+                ForceFieldPictures: DISABLED
+                FramerateControl: SPECIFIED
+                FramerateNumerator: 30001
+                FramerateDenominator: 1001
+                GopBReference: ENABLED
+                GopClosedCadence: 1
+                GopNumBFrames: 2
+                GopSize: 60
+                GopSizeUnits: FRAMES
+                SubgopLength: DYNAMIC
+                ScanType: PROGRESSIVE
+                Level: H264_LEVEL_AUTO
+                LookAheadRateControl: MEDIUM
+                NumRefFrames: 1
+                ParControl: SPECIFIED
+                ParNumerator: 1
+                ParDenominator: 1
+                Profile: MAIN
+                RateControlMode: CBR
+                Syntax: DEFAULT
+                SceneChangeDetect: ENABLED
+                Slices: 4
+                SpatialAq: ENABLED
+                TemporalAq: ENABLED
+                TimecodeInsertion: DISABLED
+                QualityLevel: STANDARD_QUALITY
+            Height: 360
+            Name: rtp-proxy
+            RespondToAfd: NONE
+            Sharpness: 50
+            ScalingBehavior: DEFAULT
+            Width: 640
+          - CodecSettings:
+              FrameCaptureSettings:
+                CaptureInterval: 2
+                CaptureIntervalUnits: SECONDS
+            Height: 360
+            Width: 640
+            Name: jpg-output-video
+        CaptionDescriptions: []
+        OutputGroups:
+          - Name: frame-capture
+            OutputGroupSettings:
+              FrameCaptureGroupSettings:
+                Destination:
+                  DestinationRefId: jpgoutputs3
+            Outputs:
+              - OutputName: jpg-output
+                VideoDescriptionName: jpg-output-video
+                OutputSettings:
+                  FrameCaptureOutputSettings:
+                    NameModifier: ""
+          - Name: rtp
+            OutputGroupSettings:
+              UdpGroupSettings:
+                InputLossAction: EMIT_PROGRAM
+            Outputs:
+              - OutputName: rtp-proxy
+                VideoDescriptionName: rtp-proxy
+                AudioDescriptionNames:
+                  - audio_0
+                CaptionDescriptionNames: []
+                OutputSettings:
+                  UdpOutputSettings:
+                    BufferMsec: 100
+                    Destination:
+                      DestinationRefId: udp1
+                    FecOutputSettings:
+                      IncludeFec: COLUMN_AND_ROW
+                      ColumnDepth: 10
+                      RowLength: 10
+                    ContainerSettings:
+                      M2tsSettings:
+                        Bitrate: 0
+        TimecodeConfig:
+          Source: EMBEDDED
+      Tags:
+        MediaLive-Workflow: test
+
+  EML3a:
+    Type: 'AWS::MediaLive::Channel'
+    Properties:
+      Name: !Sub ${Prefix}-ch-3a
+      ChannelClass: SINGLE_PIPELINE
+      InputSpecification:
+        Codec: AVC
+        MaximumBitrate: MAX_20_MBPS
+        Resolution: HD
+      LogLevel: DISABLED
+      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      Vpc:
+        SecurityGroupIds: !Ref MediaLiveSGs
+        SubnetIds:
+          - !Ref Subnet1
+      InputAttachments:
+        - InputId: !Ref LiveML3a
+          InputAttachmentName: MainStream
+          InputSettings:
+            SourceEndBehavior: CONTINUE
+            AudioSelectors:
+              - Name: ap1
+                SelectorSettings:
+                  AudioTrackSelection:
+                    Tracks:
+                      - Track: 1
+        - InputId: !Ref MP4LML3a
+          InputAttachmentName: LoopMP4
+          InputSettings:
+            SourceEndBehavior: LOOP
+            AudioSelectors:
+              - Name: ap1
+                SelectorSettings:
+                  AudioTrackSelection:
+                    Tracks:
+                      - Track: 1
+        - InputId: !Ref MP4CML3a
+          InputAttachmentName: ContinueMP4
+          InputSettings:
+            SourceEndBehavior: CONTINUE
+            AudioSelectors:
+              - Name: ap1
+                SelectorSettings:
+                  AudioTrackSelection:
+                    Tracks:
+                      - Track: 1
+      Destinations:
+        - Id: udp1
+          Settings:
+            - Url: !Sub "rtp://${EC2StreamerA}:20030"
+        - Id: jpgoutputs3
+          Settings:
+            - Url: !Sub "s3://${ThumbnailBucket}/status_thumbnails/${Prefix}-3a"
+      EncoderSettings:
+        FeatureActivations:
+          InputPrepareScheduleActions: ENABLED
+        MotionGraphicsConfiguration:
+          MotionGraphicsInsertion: ENABLED
+          MotionGraphicsSettings:
+            HtmlMotionGraphicsSettings: {}
+        AudioDescriptions:
+          - Name: audio_0
+            AudioSelectorName: ap1
+            AudioTypeControl: FOLLOW_INPUT
+            LanguageCodeControl: FOLLOW_INPUT
+            CodecSettings:
+              AacSettings:
+                InputType: NORMAL
+                Bitrate: 128000
+                CodingMode: CODING_MODE_2_0
+                RawFormat: NONE
+                Spec: MPEG4
+                Profile: LC
+                RateControlMode: CBR
+                SampleRate: 48000
+        VideoDescriptions:
+          - CodecSettings:
+              H264Settings:
+                AfdSignaling: NONE
+                ColorMetadata: INSERT
+                AdaptiveQuantization: LOW
+                Bitrate: 750000
+                EntropyEncoding: CABAC
+                FlickerAq: DISABLED
+                ForceFieldPictures: DISABLED
+                FramerateControl: SPECIFIED
+                FramerateNumerator: 30001
+                FramerateDenominator: 1001
+                GopBReference: ENABLED
+                GopClosedCadence: 1
+                GopNumBFrames: 2
+                GopSize: 60
+                GopSizeUnits: FRAMES
+                SubgopLength: DYNAMIC
+                ScanType: PROGRESSIVE
+                Level: H264_LEVEL_AUTO
+                LookAheadRateControl: MEDIUM
+                NumRefFrames: 1
+                ParControl: SPECIFIED
+                ParNumerator: 1
+                ParDenominator: 1
+                Profile: MAIN
+                RateControlMode: CBR
+                Syntax: DEFAULT
+                SceneChangeDetect: ENABLED
+                Slices: 4
+                SpatialAq: ENABLED
+                TemporalAq: ENABLED
+                TimecodeInsertion: DISABLED
+                QualityLevel: STANDARD_QUALITY
+            Height: 360
+            Name: rtp-proxy
+            RespondToAfd: NONE
+            Sharpness: 50
+            ScalingBehavior: DEFAULT
+            Width: 640
+          - CodecSettings:
+              FrameCaptureSettings:
+                CaptureInterval: 2
+                CaptureIntervalUnits: SECONDS
+            Height: 360
+            Width: 640
+            Name: jpg-output-video
+        CaptionDescriptions: [ ]
+        OutputGroups:
+          - Name: frame-capture
+            OutputGroupSettings:
+              FrameCaptureGroupSettings:
+                Destination:
+                  DestinationRefId: jpgoutputs3
+            Outputs:
+              - OutputName: jpg-output
+                VideoDescriptionName: jpg-output-video
+                OutputSettings:
+                  FrameCaptureOutputSettings:
+                    NameModifier: ""
+          - Name: rtp
+            OutputGroupSettings:
+              UdpGroupSettings:
+                InputLossAction: EMIT_PROGRAM
+            Outputs:
+              - OutputName: rtp-proxy
+                VideoDescriptionName: rtp-proxy
+                AudioDescriptionNames:
+                  - audio_0
+                CaptionDescriptionNames: [ ]
+                OutputSettings:
+                  UdpOutputSettings:
+                    BufferMsec: 100
+                    Destination:
+                      DestinationRefId: udp1
+                    FecOutputSettings:
+                      IncludeFec: COLUMN_AND_ROW
+                      ColumnDepth: 10
+                      RowLength: 10
+                    ContainerSettings:
+                      M2tsSettings:
+                        Bitrate: 0
+        TimecodeConfig:
+          Source: EMBEDDED
+      Tags:
+        MediaLive-Workflow: test
+
+
+  EML3b:
+    Type: 'AWS::MediaLive::Channel'
+    Properties:
+      Name: !Sub ${Prefix}-ch-3b
+      ChannelClass: SINGLE_PIPELINE
+      InputSpecification:
+        Codec: AVC
+        MaximumBitrate: MAX_20_MBPS
+        Resolution: HD
+      LogLevel: DISABLED
+      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      Vpc:
+        SecurityGroupIds: !Ref MediaLiveSGs
+        SubnetIds:
+          - !Ref Subnet2
+      InputAttachments:
+        - InputId: !Ref LiveML3b
+          InputAttachmentName: MainStream
+          InputSettings:
+            SourceEndBehavior: CONTINUE
+            AudioSelectors:
+              - Name: ap1
+                SelectorSettings:
+                  AudioTrackSelection:
+                    Tracks:
+                      - Track: 1
+        - InputId: !Ref MP4LML3b
+          InputAttachmentName: LoopMP4
+          InputSettings:
+            SourceEndBehavior: LOOP
+            AudioSelectors:
+              - Name: ap1
+                SelectorSettings:
+                  AudioTrackSelection:
+                    Tracks:
+                      - Track: 1
+        - InputId: !Ref MP4CML3b
+          InputAttachmentName: ContinueMP4
+          InputSettings:
+            SourceEndBehavior: CONTINUE
+            AudioSelectors:
+              - Name: ap1
+                SelectorSettings:
+                  AudioTrackSelection:
+                    Tracks:
+                      - Track: 1
+      Destinations:
+        - Id: udp1
+          Settings:
+            - Url: !Sub "rtp://${EC2StreamerA}:21030"
+        - Id: jpgoutputs3
+          Settings:
+            - Url: !Sub "s3://${ThumbnailBucket}/status_thumbnails/${Prefix}-3b"
+      EncoderSettings:
+        FeatureActivations:
+          InputPrepareScheduleActions: ENABLED
+        MotionGraphicsConfiguration:
+          MotionGraphicsInsertion: ENABLED
+          MotionGraphicsSettings:
+            HtmlMotionGraphicsSettings: {}
+        AudioDescriptions:
+          - Name: audio_0
+            AudioSelectorName: ap1
+            AudioTypeControl: FOLLOW_INPUT
+            LanguageCodeControl: FOLLOW_INPUT
+            CodecSettings:
+              AacSettings:
+                InputType: NORMAL
+                Bitrate: 128000
+                CodingMode: CODING_MODE_2_0
+                RawFormat: NONE
+                Spec: MPEG4
+                Profile: LC
+                RateControlMode: CBR
+                SampleRate: 48000
+        VideoDescriptions:
+          - CodecSettings:
+              H264Settings:
+                AfdSignaling: NONE
+                ColorMetadata: INSERT
+                AdaptiveQuantization: LOW
+                Bitrate: 750000
+                EntropyEncoding: CABAC
+                FlickerAq: DISABLED
+                ForceFieldPictures: DISABLED
+                FramerateControl: SPECIFIED
+                FramerateNumerator: 30001
+                FramerateDenominator: 1001
+                GopBReference: ENABLED
+                GopClosedCadence: 1
+                GopNumBFrames: 2
+                GopSize: 60
+                GopSizeUnits: FRAMES
+                SubgopLength: DYNAMIC
+                ScanType: PROGRESSIVE
+                Level: H264_LEVEL_AUTO
+                LookAheadRateControl: MEDIUM
+                NumRefFrames: 1
+                ParControl: SPECIFIED
+                ParNumerator: 1
+                ParDenominator: 1
+                Profile: MAIN
+                RateControlMode: CBR
+                Syntax: DEFAULT
+                SceneChangeDetect: ENABLED
+                Slices: 4
+                SpatialAq: ENABLED
+                TemporalAq: ENABLED
+                TimecodeInsertion: DISABLED
+                QualityLevel: STANDARD_QUALITY
+            Height: 360
+            Name: rtp-proxy
+            RespondToAfd: NONE
+            Sharpness: 50
+            ScalingBehavior: DEFAULT
+            Width: 640
+          - CodecSettings:
+              FrameCaptureSettings:
+                CaptureInterval: 2
+                CaptureIntervalUnits: SECONDS
+            Height: 360
+            Width: 640
+            Name: jpg-output-video
+        CaptionDescriptions: [ ]
+        OutputGroups:
+          - Name: frame-capture
+            OutputGroupSettings:
+              FrameCaptureGroupSettings:
+                Destination:
+                  DestinationRefId: jpgoutputs3
+            Outputs:
+              - OutputName: jpg-output
+                VideoDescriptionName: jpg-output-video
+                OutputSettings:
+                  FrameCaptureOutputSettings:
+                    NameModifier: ""
+          - Name: rtp
+            OutputGroupSettings:
+              UdpGroupSettings:
+                InputLossAction: EMIT_PROGRAM
+            Outputs:
+              - OutputName: rtp-proxy
+                VideoDescriptionName: rtp-proxy
+                AudioDescriptionNames:
+                  - audio_0
+                CaptionDescriptionNames: [ ]
+                OutputSettings:
+                  UdpOutputSettings:
+                    BufferMsec: 100
+                    Destination:
+                      DestinationRefId: udp1
+                    FecOutputSettings:
+                      IncludeFec: COLUMN_AND_ROW
+                      ColumnDepth: 10
+                      RowLength: 10
+                    ContainerSettings:
+                      M2tsSettings:
+                        Bitrate: 0
+        TimecodeConfig:
+          Source: EMBEDDED
+      Tags:
+        MediaLive-Workflow: test
+
+
+  EML4a:
+    Type: 'AWS::MediaLive::Channel'
+    Properties:
+      Name: !Sub ${Prefix}-ch-4a
+      ChannelClass: SINGLE_PIPELINE
+      InputSpecification:
+        Codec: AVC
+        MaximumBitrate: MAX_20_MBPS
+        Resolution: HD
+      LogLevel: DISABLED
+      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      Vpc:
+        SecurityGroupIds: !Ref MediaLiveSGs
+        SubnetIds:
+          - !Ref Subnet1
+      InputAttachments:
+        - InputId: !Ref LiveML4a
+          InputAttachmentName: MainStream
+          InputSettings:
+            SourceEndBehavior: CONTINUE
+            AudioSelectors:
+              - Name: ap1
+                SelectorSettings:
+                  AudioTrackSelection:
+                    Tracks:
+                      - Track: 1
+        - InputId: !Ref MP4LML4a
+          InputAttachmentName: LoopMP4
+          InputSettings:
+            SourceEndBehavior: LOOP
+            AudioSelectors:
+              - Name: ap1
+                SelectorSettings:
+                  AudioTrackSelection:
+                    Tracks:
+                      - Track: 1
+        - InputId: !Ref MP4CML4a
+          InputAttachmentName: ContinueMP4
+          InputSettings:
+            SourceEndBehavior: CONTINUE
+            AudioSelectors:
+              - Name: ap1
+                SelectorSettings:
+                  AudioTrackSelection:
+                    Tracks:
+                      - Track: 1
+      Destinations:
+        - Id: udp1
+          Settings:
+            - Url: !Sub "rtp://${EC2StreamerA}:20040"
+        - Id: jpgoutputs3
+          Settings:
+            - Url: !Sub "s3://${ThumbnailBucket}/status_thumbnails/${Prefix}-4a"
+      EncoderSettings:
+        FeatureActivations:
+          InputPrepareScheduleActions: ENABLED
+        MotionGraphicsConfiguration:
+          MotionGraphicsInsertion: ENABLED
+          MotionGraphicsSettings:
+            HtmlMotionGraphicsSettings: {}
+        AudioDescriptions:
+          - Name: audio_0
+            AudioSelectorName: ap1
+            AudioTypeControl: FOLLOW_INPUT
+            LanguageCodeControl: FOLLOW_INPUT
+            CodecSettings:
+              AacSettings:
+                InputType: NORMAL
+                Bitrate: 128000
+                CodingMode: CODING_MODE_2_0
+                RawFormat: NONE
+                Spec: MPEG4
+                Profile: LC
+                RateControlMode: CBR
+                SampleRate: 48000
+        VideoDescriptions:
+          - CodecSettings:
+              H264Settings:
+                AfdSignaling: NONE
+                ColorMetadata: INSERT
+                AdaptiveQuantization: LOW
+                Bitrate: 750000
+                EntropyEncoding: CABAC
+                FlickerAq: DISABLED
+                ForceFieldPictures: DISABLED
+                FramerateControl: SPECIFIED
+                FramerateNumerator: 30001
+                FramerateDenominator: 1001
+                GopBReference: ENABLED
+                GopClosedCadence: 1
+                GopNumBFrames: 2
+                GopSize: 60
+                GopSizeUnits: FRAMES
+                SubgopLength: DYNAMIC
+                ScanType: PROGRESSIVE
+                Level: H264_LEVEL_AUTO
+                LookAheadRateControl: MEDIUM
+                NumRefFrames: 1
+                ParControl: SPECIFIED
+                ParNumerator: 1
+                ParDenominator: 1
+                Profile: MAIN
+                RateControlMode: CBR
+                Syntax: DEFAULT
+                SceneChangeDetect: ENABLED
+                Slices: 4
+                SpatialAq: ENABLED
+                TemporalAq: ENABLED
+                TimecodeInsertion: DISABLED
+                QualityLevel: STANDARD_QUALITY
+            Height: 360
+            Name: rtp-proxy
+            RespondToAfd: NONE
+            Sharpness: 50
+            ScalingBehavior: DEFAULT
+            Width: 640
+          - CodecSettings:
+              FrameCaptureSettings:
+                CaptureInterval: 2
+                CaptureIntervalUnits: SECONDS
+            Height: 360
+            Width: 640
+            Name: jpg-output-video
+        CaptionDescriptions: [ ]
+        OutputGroups:
+          - Name: frame-capture
+            OutputGroupSettings:
+              FrameCaptureGroupSettings:
+                Destination:
+                  DestinationRefId: jpgoutputs3
+            Outputs:
+              - OutputName: jpg-output
+                VideoDescriptionName: jpg-output-video
+                OutputSettings:
+                  FrameCaptureOutputSettings:
+                    NameModifier: ""
+          - Name: rtp
+            OutputGroupSettings:
+              UdpGroupSettings:
+                InputLossAction: EMIT_PROGRAM
+            Outputs:
+              - OutputName: rtp-proxy
+                VideoDescriptionName: rtp-proxy
+                AudioDescriptionNames:
+                  - audio_0
+                CaptionDescriptionNames: [ ]
+                OutputSettings:
+                  UdpOutputSettings:
+                    BufferMsec: 100
+                    Destination:
+                      DestinationRefId: udp1
+                    FecOutputSettings:
+                      IncludeFec: COLUMN_AND_ROW
+                      ColumnDepth: 10
+                      RowLength: 10
+                    ContainerSettings:
+                      M2tsSettings:
+                        Bitrate: 0
+        TimecodeConfig:
+          Source: EMBEDDED
+      Tags:
+        MediaLive-Workflow: test
+
+
+  EML4b:
+    Type: 'AWS::MediaLive::Channel'
+    Properties:
+      Name: !Sub ${Prefix}-ch-4b
+      ChannelClass: SINGLE_PIPELINE
+      InputSpecification:
+        Codec: AVC
+        MaximumBitrate: MAX_20_MBPS
+        Resolution: HD
+      LogLevel: DISABLED
+      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      Vpc:
+        SecurityGroupIds: !Ref MediaLiveSGs
+        SubnetIds:
+          - !Ref Subnet2
+      InputAttachments:
+        - InputId: !Ref LiveML4b
+          InputAttachmentName: MainStream
+          InputSettings:
+            SourceEndBehavior: CONTINUE
+            AudioSelectors:
+              - Name: ap1
+                SelectorSettings:
+                  AudioTrackSelection:
+                    Tracks:
+                      - Track: 1
+        - InputId: !Ref MP4LML4b
+          InputAttachmentName: LoopMP4
+          InputSettings:
+            SourceEndBehavior: LOOP
+            AudioSelectors:
+              - Name: ap1
+                SelectorSettings:
+                  AudioTrackSelection:
+                    Tracks:
+                      - Track: 1
+        - InputId: !Ref MP4CML4b
+          InputAttachmentName: ContinueMP4
+          InputSettings:
+            SourceEndBehavior: CONTINUE
+            AudioSelectors:
+              - Name: ap1
+                SelectorSettings:
+                  AudioTrackSelection:
+                    Tracks:
+                      - Track: 1
+      Destinations:
+        - Id: udp1
+          Settings:
+            - Url: !Sub "rtp://${EC2StreamerA}:21040"
+        - Id: jpgoutputs3
+          Settings:
+            - Url: !Sub "s3://${ThumbnailBucket}/status_thumbnails/${Prefix}-4b"
+      EncoderSettings:
+        FeatureActivations:
+          InputPrepareScheduleActions: ENABLED
+        MotionGraphicsConfiguration:
+          MotionGraphicsInsertion: ENABLED
+          MotionGraphicsSettings:
+            HtmlMotionGraphicsSettings: {}
+        AudioDescriptions:
+          - Name: audio_0
+            AudioSelectorName: ap1
+            AudioTypeControl: FOLLOW_INPUT
+            LanguageCodeControl: FOLLOW_INPUT
+            CodecSettings:
+              AacSettings:
+                InputType: NORMAL
+                Bitrate: 128000
+                CodingMode: CODING_MODE_2_0
+                RawFormat: NONE
+                Spec: MPEG4
+                Profile: LC
+                RateControlMode: CBR
+                SampleRate: 48000
+        VideoDescriptions:
+          - CodecSettings:
+              H264Settings:
+                AfdSignaling: NONE
+                ColorMetadata: INSERT
+                AdaptiveQuantization: LOW
+                Bitrate: 750000
+                EntropyEncoding: CABAC
+                FlickerAq: DISABLED
+                ForceFieldPictures: DISABLED
+                FramerateControl: SPECIFIED
+                FramerateNumerator: 30001
+                FramerateDenominator: 1001
+                GopBReference: ENABLED
+                GopClosedCadence: 1
+                GopNumBFrames: 2
+                GopSize: 60
+                GopSizeUnits: FRAMES
+                SubgopLength: DYNAMIC
+                ScanType: PROGRESSIVE
+                Level: H264_LEVEL_AUTO
+                LookAheadRateControl: MEDIUM
+                NumRefFrames: 1
+                ParControl: SPECIFIED
+                ParNumerator: 1
+                ParDenominator: 1
+                Profile: MAIN
+                RateControlMode: CBR
+                Syntax: DEFAULT
+                SceneChangeDetect: ENABLED
+                Slices: 4
+                SpatialAq: ENABLED
+                TemporalAq: ENABLED
+                TimecodeInsertion: DISABLED
+                QualityLevel: STANDARD_QUALITY
+            Height: 360
+            Name: rtp-proxy
+            RespondToAfd: NONE
+            Sharpness: 50
+            ScalingBehavior: DEFAULT
+            Width: 640
+          - CodecSettings:
+              FrameCaptureSettings:
+                CaptureInterval: 2
+                CaptureIntervalUnits: SECONDS
+            Height: 360
+            Width: 640
+            Name: jpg-output-video
+        CaptionDescriptions: [ ]
+        OutputGroups:
+          - Name: frame-capture
+            OutputGroupSettings:
+              FrameCaptureGroupSettings:
+                Destination:
+                  DestinationRefId: jpgoutputs3
+            Outputs:
+              - OutputName: jpg-output
+                VideoDescriptionName: jpg-output-video
+                OutputSettings:
+                  FrameCaptureOutputSettings:
+                    NameModifier: ""
+          - Name: rtp
+            OutputGroupSettings:
+              UdpGroupSettings:
+                InputLossAction: EMIT_PROGRAM
+            Outputs:
+              - OutputName: rtp-proxy
+                VideoDescriptionName: rtp-proxy
+                AudioDescriptionNames:
+                  - audio_0
+                CaptionDescriptionNames: [ ]
+                OutputSettings:
+                  UdpOutputSettings:
+                    BufferMsec: 100
+                    Destination:
+                      DestinationRefId: udp1
+                    FecOutputSettings:
+                      IncludeFec: COLUMN_AND_ROW
+                      ColumnDepth: 10
+                      RowLength: 10
+                    ContainerSettings:
+                      M2tsSettings:
+                        Bitrate: 0
+        TimecodeConfig:
+          Source: EMBEDDED
+      Tags:
+        MediaLive-Workflow: test
