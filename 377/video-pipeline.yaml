@@ -305,112 +305,88 @@ Resources:
             - Url: !Sub "rtp://${MediaFlowOut1.Source.IngestIp}:5000"
         - Id: udp2
           Settings:
-            - Url: !Sub "rtp://ec2-streamer-ip-in-subnet-${Subnet1}:20110"
+            - Url: !Sub "rtp://ec2-streamer-ip-in-subnet-${Subnet1}:21010"
         - Id: jpgoutputs3
           Settings:
             - Url: !Sub "s3ssl://${ThumbnailBucket}/status_thumbnails/${Prefix}"
       EncoderSettings:
+        FeatureActivations:
+          InputPrepareScheduleActions: ENABLED
         AudioDescriptions:
           - Name: audio_0
             AudioSelectorName: ap1
             AudioTypeControl: FOLLOW_INPUT
             LanguageCodeControl: FOLLOW_INPUT
             CodecSettings:
-              AacSettings:
-                InputType: NORMAL
-                Bitrate: 128000
+              Mp2Settings:
                 CodingMode: CODING_MODE_2_0
-                RawFormat: NONE
-                Spec: MPEG4
-                Profile: LC
-                RateControlMode: CBR
+                Bitrate: 192000
                 SampleRate: 48000
           - Name: audio_1
             AudioSelectorName: ap2
             AudioTypeControl: FOLLOW_INPUT
             LanguageCodeControl: FOLLOW_INPUT
             CodecSettings:
-              AacSettings:
-                InputType: NORMAL
-                Bitrate: 128000
+              Mp2Settings:
                 CodingMode: CODING_MODE_2_0
-                RawFormat: NONE
-                Spec: MPEG4
-                Profile: LC
-                RateControlMode: CBR
+                Bitrate: 192000
                 SampleRate: 48000
           - Name: audio_2
             AudioSelectorName: ap3
             AudioTypeControl: FOLLOW_INPUT
             LanguageCodeControl: FOLLOW_INPUT
             CodecSettings:
-              AacSettings:
-                InputType: NORMAL
-                Bitrate: 128000
+              Mp2Settings:
                 CodingMode: CODING_MODE_2_0
-                RawFormat: NONE
-                Spec: MPEG4
-                Profile: LC
-                RateControlMode: CBR
+                Bitrate: 192000
                 SampleRate: 48000
           - Name: audio_3
             AudioSelectorName: ap4
             AudioTypeControl: FOLLOW_INPUT
             LanguageCodeControl: FOLLOW_INPUT
             CodecSettings:
-              AacSettings:
-                InputType: NORMAL
-                Bitrate: 128000
+              Mp2Settings:
                 CodingMode: CODING_MODE_2_0
-                RawFormat: NONE
-                Spec: MPEG4
-                Profile: LC
-                RateControlMode: CBR
+                Bitrate: 192000
                 SampleRate: 48000
           - Name: audio_4
             AudioSelectorName: ap5
             AudioTypeControl: FOLLOW_INPUT
             LanguageCodeControl: FOLLOW_INPUT
             CodecSettings:
-              AacSettings:
-                InputType: NORMAL
-                Bitrate: 128000
+              Mp2Settings:
                 CodingMode: CODING_MODE_2_0
-                RawFormat: NONE
-                Spec: MPEG4
-                Profile: LC
-                RateControlMode: CBR
+                Bitrate: 192000
                 SampleRate: 48000
           - Name: audio_5
             AudioSelectorName: ap6
             AudioTypeControl: FOLLOW_INPUT
             LanguageCodeControl: FOLLOW_INPUT
             CodecSettings:
-              AacSettings:
-                InputType: NORMAL
-                Bitrate: 128000
+              Mp2Settings:
                 CodingMode: CODING_MODE_2_0
-                RawFormat: NONE
-                Spec: MPEG4
-                Profile: LC
-                RateControlMode: CBR
+                Bitrate: 192000
                 SampleRate: 48000
           - Name: audio_6
             AudioSelectorName: ap7
             AudioTypeControl: FOLLOW_INPUT
             LanguageCodeControl: FOLLOW_INPUT
             CodecSettings:
-              AacSettings:
-                InputType: NORMAL
-                Bitrate: 128000
+              Mp2Settings:
                 CodingMode: CODING_MODE_2_0
-                RawFormat: NONE
-                Spec: MPEG4
-                Profile: LC
-                RateControlMode: CBR
+                Bitrate: 192000
                 SampleRate: 48000
           - Name: audio_7
-            AudioSelectorName: ap7
+            AudioSelectorName: ap8
+            AudioTypeControl: FOLLOW_INPUT
+            LanguageCodeControl: FOLLOW_INPUT
+            CodecSettings:
+              Mp2Settings:
+                CodingMode: CODING_MODE_2_0
+                Bitrate: 192000
+                SampleRate: 48000
+          - Name: audio_proxy
+            AudioSelectorName: ap1
             AudioTypeControl: FOLLOW_INPUT
             LanguageCodeControl: FOLLOW_INPUT
             CodecSettings:
@@ -427,77 +403,63 @@ Resources:
           - CodecSettings:
               H264Settings:
                 AfdSignaling: NONE
-                ColorMetadata: INSERT
-                AdaptiveQuantization: HIGH
-                #Bitrate: 4500000
+                ColorMetadata: IGNORE
+                AdaptiveQuantization: AUTO
+                Bitrate: 20000000
                 EntropyEncoding: CABAC
-                FlickerAq: DISABLED
+                FlickerAq: ENABLED
                 ForceFieldPictures: DISABLED
                 FramerateControl: INITIALIZE_FROM_SOURCE
-                #FramerateNumerator: 30000
-                #FramerateDenominator: 1001
-                GopBReference: ENABLED
+                GopBReference: DISABLED
                 GopClosedCadence: 1
-                GopNumBFrames: 2
-                GopSize: 60
-                GopSizeUnits: FRAMES
-                SubgopLength: DYNAMIC
+                GopSize: 2
+                GopSizeUnits: SECONDS
+                SubgopLength: FIXED
                 ScanType: INTERLACED
                 Level: H264_LEVEL_AUTO
                 LookAheadRateControl: MEDIUM
                 NumRefFrames: 1
-                ParControl: SPECIFIED
-                ParNumerator: 1
-                ParDenominator: 1
+                ParControl: INITIALIZE_FROM_SOURCE
                 Profile: HIGH
                 RateControlMode: CBR
                 Syntax: DEFAULT
                 SceneChangeDetect: ENABLED
-                Slices: 4
                 SpatialAq: ENABLED
                 TemporalAq: ENABLED
-                TimecodeInsertion: DISABLED
+                TimecodeInsertion: PIC_TIMING_SEI
                 QualityLevel: ENHANCED_QUALITY
                 FilterSettings:
                   TemporalFilterSettings:
                     PostFilterSharpening: AUTO
                     Strength: AUTO
-            #Height: 720
             Name: rtp-distribution
             RespondToAfd: NONE
             Sharpness: 50
             ScalingBehavior: DEFAULT
-            #Width: 1280
           - CodecSettings:
               H264Settings:
                 AfdSignaling: NONE
-                ColorMetadata: INSERT
+                ColorMetadata: IGNORE
                 AdaptiveQuantization: LOW
-                Bitrate: 500000
+                Bitrate: 250000
                 EntropyEncoding: CABAC
-                FlickerAq: DISABLED
+                FlickerAq: ENABLED
                 ForceFieldPictures: DISABLED
                 FramerateControl: INITIALIZE_FROM_SOURCE
-                #FramerateNumerator: 30000
-                #FramerateDenominator: 1001
-                GopBReference: ENABLED
+                GopBReference: DISABLED
                 GopClosedCadence: 1
-                GopNumBFrames: 2
-                GopSize: 60
-                GopSizeUnits: FRAMES
-                SubgopLength: DYNAMIC
-                ScanType: INTERLACED
-                #Level: H264_LEVEL_4_1
+                GopSize: 2
+                GopSizeUnits: SECONDS
+                SubgopLength: FIXED
+                ScanType: PROGRESSIVE
+                Level: H264_LEVEL_AUTO
                 LookAheadRateControl: LOW
                 NumRefFrames: 1
-                ParControl: SPECIFIED
-                ParNumerator: 1
-                ParDenominator: 1
+                ParControl: INITIALIZE_FROM_SOURCE
                 Profile: MAIN
                 RateControlMode: CBR
                 Syntax: DEFAULT
                 SceneChangeDetect: ENABLED
-                Slices: 4
                 SpatialAq: ENABLED
                 TemporalAq: ENABLED
                 TimecodeInsertion: DISABLED
@@ -547,7 +509,7 @@ Resources:
                 CaptionDescriptionNames: []
                 OutputSettings:
                   UdpOutputSettings:
-                    BufferMsec: 50
+                    BufferMsec: 1000
                     Destination:
                       DestinationRefId: udp1
                     FecOutputSettings:
@@ -556,15 +518,16 @@ Resources:
                       RowLength: 10
                     ContainerSettings:
                       M2tsSettings:
-                        Bitrate: 0  
+                        ProgramNum: 1
+                        Scte35Control: PASSTHROUGH
               - OutputName: rtp-proxy
                 VideoDescriptionName: rtp-proxy
                 AudioDescriptionNames:
-                  - audio_0
+                  - audio_proxy
                 CaptionDescriptionNames: []
                 OutputSettings:
                   UdpOutputSettings:
-                    BufferMsec: 50
+                    BufferMsec: 100
                     Destination:
                       DestinationRefId: udp2
                     FecOutputSettings:
@@ -573,11 +536,12 @@ Resources:
                       RowLength: 10
                     ContainerSettings:
                       M2tsSettings:
-                        Bitrate: 0                        
+                        ProgramNum: 1
+                        Scte35Control: PASSTHROUGH
         TimecodeConfig:
           Source: EMBEDDED
       Tags:
-        MediaLive-Workflow: test
+        Bumpers: Bumpers
 
   MediaLiveChannelProxy:
     Type: 'AWS::MediaLive::Channel'
@@ -664,33 +628,27 @@ Resources:
           - CodecSettings:
               H264Settings:
                 AfdSignaling: NONE
-                ColorMetadata: INSERT
-                AdaptiveQuantization: LOW
-                Bitrate: 500000
+                ColorMetadata: IGNORE
+                AdaptiveQuantization: AUTO
+                Bitrate: 250000
                 EntropyEncoding: CABAC
                 FlickerAq: DISABLED
                 ForceFieldPictures: DISABLED
                 FramerateControl: INITIALIZE_FROM_SOURCE
-                #FramerateNumerator: 30000
-                #FramerateDenominator: 1001
-                GopBReference: ENABLED
+                GopBReference: DISABLED
                 GopClosedCadence: 1
-                GopNumBFrames: 2
-                GopSize: 60
-                GopSizeUnits: FRAMES
-                SubgopLength: DYNAMIC
-                ScanType: INTERLACED
-                #Level: H264_LEVEL_4_1
+                GopSize: 2
+                GopSizeUnits: SECONDS
+                SubgopLength: FIXED
+                ScanType: PROGRESSIVE
+                Level: H264_LEVEL_AUTO
                 LookAheadRateControl: LOW
                 NumRefFrames: 1
-                ParControl: SPECIFIED
-                ParNumerator: 1
-                ParDenominator: 1
+                ParControl: INITIALIZE_FROM_SOURCE
                 Profile: MAIN
                 RateControlMode: CBR
                 Syntax: DEFAULT
                 SceneChangeDetect: ENABLED
-                Slices: 4
                 SpatialAq: ENABLED
                 TemporalAq: ENABLED
                 TimecodeInsertion: DISABLED
@@ -715,7 +673,7 @@ Resources:
                 CaptionDescriptionNames: []
                 OutputSettings:
                   UdpOutputSettings:
-                    BufferMsec: 50
+                    BufferMsec: 100
                     Destination:
                       DestinationRefId: udp1
                     FecOutputSettings:
@@ -724,8 +682,9 @@ Resources:
                       RowLength: 10
                     ContainerSettings:
                       M2tsSettings:
-                        Bitrate: 0
+                        ProgramNum: 1
+                        Scte35Control: PASSTHROUGH
         TimecodeConfig:
           Source: EMBEDDED
       Tags:
-        MediaLive-Workflow: test
+        Bumpers: Bumpers

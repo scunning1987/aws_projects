@@ -23,6 +23,12 @@ Parameters:
     AllowedPattern: ^arn:aws:iam::.+ #(\d{12}|aws):policy/:+
     Default: arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
 
+  MediaLiveScheduleCleanupTag:
+    Description: Enter a Property name here that the schedule cleanup function will look for when it runs its daily cleanup. Channels that don't have this tag will be ignored
+    Type: String
+    Default: Bumpers
+    MinValue: 1
+
 ## Resources
 Resources:
   #################
@@ -172,6 +178,17 @@ Resources:
       - S3Bucket
       - ThumbnailS3PutRename
 
+  LambdaInvokedByEventBridge:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt MediaLiveScheduleCleanup.Arn
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt DailyScheduleCleanup.Arn
+      DependsOn:
+        - MediaLiveScheduleCleanup
+        - DailyScheduleCleanup
+
   #################
   ## Custom Resource
   #################
@@ -307,6 +324,30 @@ Resources:
       Code:
         S3Bucket: !Ref S3Bucket
         S3Key: !GetAtt FileMover.jpg-s3-put-rename
+      Tags:
+        - Key: StackName
+          Value: !Ref AWS::StackName
+    DependsOn:
+      - S3Bucket
+      - LambdaRole
+      - FileCopier
+      - FileMover
+
+  MediaLiveScheduleCleanup:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Function to cleanup old MediaLive schedule actions every day
+      Role: !GetAtt LambdaRole.Arn
+      Runtime: python3.8
+      Handler: index.lambda_handler
+      Timeout: 580
+      MemorySize: 10240
+      Code:
+        S3Bucket: !Ref S3Bucket
+        S3Key: !GetAtt FileMover.medialive-schedule-cleanup
+      Environment:
+        Variables:
+          TAGKEY: !Ref MediaLiveScheduleCleanupTag
       Tags:
         - Key: StackName
           Value: !Ref AWS::StackName
@@ -987,6 +1028,24 @@ Resources:
       VpcEndpointType : Interface
       SecurityGroupIds: !Ref InterfaceEndpointSecurityGroups
 
+    #################
+    ## EventBridge
+    #################
+
+  DailyScheduleCleanup:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: This Event Rule will run at midnight every night to cleanup schedule events in MediaLive Channels that are part of the workflow
+      Name: MediaLiveScheduleCleanup
+      RoleArn: ! Role with CloudWatch as trusted entity for executing Lambda function
+      State: ENABLED
+      ScheduleExpression: CRON
+      Targets:
+        - Arn: Lambda ARN!
+          Id: LambdaForMediaLiveCleanup
+          RetryPolicy:
+            MaximumRetryAttempts: 4
+            MaximumEventAgeInSeconds: 600
 
 #################################
 # Outputs
