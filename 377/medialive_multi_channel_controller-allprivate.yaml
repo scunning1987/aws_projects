@@ -27,7 +27,6 @@ Parameters:
     Description: Enter a Property name here that the schedule cleanup function will look for when it runs its daily cleanup. Channels that don't have this tag will be ignored
     Type: String
     Default: Bumpers
-    MinValue: 1
 
 ## Resources
 Resources:
@@ -231,10 +230,10 @@ Resources:
   #################
   ## Lambda
   #################
+
   MediaLiveControlFunctions:
     Type: AWS::Lambda::Function
     Properties:
-      #FunctionName: !Sub ${DeploymentName}-medialive-html5-api-handler
       Description: MediaLive Boto3 Control actions
       Role: !GetAtt LambdaRole.Arn
       Runtime: python3.8
@@ -258,7 +257,6 @@ Resources:
   MediaLiveControlConfig:
     Type: AWS::Lambda::Function
     Properties:
-      #FunctionName: !Sub ${DeploymentName}-medialive-html5-api-handler
       Description: Channel configuration API handler
       Role: !GetAtt LambdaRole.Arn
       Runtime: python3.8
@@ -314,7 +312,6 @@ Resources:
   ThumbnailS3PutRename:
     Type: AWS::Lambda::Function
     Properties:
-      #FunctionName: !Sub ${DeploymentName}-medialive-html5-api-handler
       Description: S3 PUT Event driven Lambda to remove the incrementing filename of MediaLive Status thumbnails
       Role: !GetAtt LambdaRole.Arn
       Runtime: python3.8
@@ -360,7 +357,6 @@ Resources:
   FileCopier:
     Type: AWS::Lambda::Function
     Properties:
-      #FunctionName: !Sub ${DeploymentName}-medialive-html5-api-handler
       Description: Lambda function to copy solution files to destination bucket
       Role: !GetAtt LambdaRole.Arn
       Runtime: python3.8
@@ -1039,9 +1035,9 @@ Resources:
       Name: MediaLiveScheduleCleanup
       RoleArn: ! Role with CloudWatch as trusted entity for executing Lambda function
       State: ENABLED
-      ScheduleExpression: CRON
+      ScheduleExpression: cron(0 0 * * ? *)
       Targets:
-        - Arn: Lambda ARN!
+        - Arn: !GetAtt MediaLiveScheduleCleanup.Arn
           Id: LambdaForMediaLiveCleanup
           RetryPolicy:
             MaximumRetryAttempts: 4
