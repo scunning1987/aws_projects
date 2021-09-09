@@ -1,8 +1,59 @@
-//
+// multiviewer
 
 //const apiendpointurl = "https://jl66fjfil5.execute-api.us-west-2.amazonaws.com/eng/playout"
 
 //// LEAVE CODE BELOW THIS LINE /////
+
+/* how to get the url to the base api gateway proxy
+  page_url_to_array = window.location.href.split("/")
+  api_gw_proxy_base = page_url_to_array.slice(0,5).join("/")
+*/
+supervisor_pass = "star"
+
+function tableCreate(total_channels){
+
+    page_url_to_array = window.location.href.split("/")
+    api_gw_proxy_base = page_url_to_array.slice(0,5).join("/")
+
+    var body = document.body,
+        tbl  = document.createElement('table'),
+    columns = 8 / thumbnail_size;
+    thumb_height = 90 * thumbnail_size;
+    thumb_width = 160 * thumbnail_size;
+    tbl.style.width  = '100px';
+    tbl.style.padding = '20px';
+    rows_required = Math.ceil(total_channels / columns);
+
+    for(var i = 1; i <= rows_required; i++){
+        var tr = tbl.insertRow();
+        for(var j = 1; j < total_channels + 1; j++){
+            if( Math.ceil( j / columns ) == i ){
+                var td = tr.insertCell();
+                //td.appendChild(document.createTextNode(thumbs[j-1]));
+                proxy_thumbnail_s3uri = live_event_map[j.toString()].proxy_thumbnail_name
+                proxy_thumbnail_https = api_gw_proxy_base + "/" + proxy_thumbnail_s3uri.replace("s3://","")
+                td.innerHTML = '<img height="'+thumb_height+'" width="'+thumb_width+'" class="thumbs" id="thumb_jpg_'+j.toString()+'" src="'+proxy_thumbnail_https+'" onclick=\'thumbclick("'+j.toString()+'")\'></br>'+live_event_map[j.toString()].channel_friendly_name
+                td.id = "thumb_"+ j.toString()
+                //td.style.border = '1px solid black';
+                td.style.padding = '10px 10px 10px 10px';
+            }
+        }
+    }
+    //document.body.appendChild(tbl)
+    document.getElementById("multiviewer").appendChild(tbl);
+}
+
+setInterval(function() {
+// function to get updated thumbs from MediaLive channels - via S3
+if ( multiviewer_status == "on" ){
+for (channel in live_event_map){
+  var datevar = Date.now().toString()
+  var proxy_thumbnail_s3uri = live_event_map[channel].proxy_thumbnail_name
+  var proxy_thumbnail_https = api_gw_proxy_base + "/" + proxy_thumbnail_s3uri.replace("s3://","")
+  document.getElementById('thumb_jpg_'+channel).src = proxy_thumbnail_https+'?rand='+datevar
+  }
+}
+}, 2000);
 
 function mediaLiveControl(evt, controlName) {
   var i, tabcontent, tablinks;
@@ -30,6 +81,8 @@ function mediaLiveControl(evt, controlName) {
   } else if (controlName == "bumper"){
     console.log("Selected tab is " + controlName)
 
+  } else if (controlName == "chstartstop") {
+    document.getElementById("passwordbox").value = ""
   }  else {
     console.log("Selected tab is " + controlName)
   }
@@ -40,6 +93,8 @@ function chstartstopcontrol(action_type){
   if ( pipSelector == "" ) {
     console.log("Operator has not selected a channel thumbnail. Select a thumbnail first before an action can be performed")
     alert("Please select a channel thumbnail first!")
+  } else if (action_type == "stop" && document.getElementById("passwordbox").value != supervisor_pass ) {
+    alert("For stop actions you must enter the supervisor password in the input field below... You have either not entered any value or the password is incorrect.")
   } else {
   if (window.confirm("Do you really want to "+action_type+" this channel?")) {
 
@@ -168,29 +223,15 @@ function chbumperprep(bumper_number){
 
 var fadeAway = function(buttonid) {
   setTimeout(function(){
+
+  if ( buttonid == "insertconfirmmessage" ){
+    document.getElementById("insertconfirmmessage").display = "none";
+    document.getElementById("insertconfirmmessage").innerHTML = "";
+    console.log("hiding the button press message")
+  } else {
   document.getElementById(buttonid).classList.remove('pressedbutton');
- }, 2000);
-}
-
-function channelDropdownPopulate(){
-
-  let dropdown = document.getElementById('channel_selector');
-  dropdown.length = 0;
-
-  let defaultOption = document.createElement('option');
-  defaultOption.text = 'Select Channel';
-
-  dropdown.add(defaultOption);
-  dropdown.selectedIndex = 0;
-
-  for (channel in live_event_map){
-    //live_event_map[channel][3]
-    option = document.createElement('option');
-    option.text = live_event_map[channel].channel_friendly_name;
-    option.value = channel;
-    dropdown.add(option)
   }
-
+ }, 4000);
 }
 
 function bumperDropdownPopulate(){
@@ -268,16 +309,29 @@ function bumperPopulator(value){
 
 var sldpPlayers = [];
 
-//document.getElementById("channel_selector").onclick = function () {
-document.getElementById("channel_selector").addEventListener('change', (event) => {
+function thumbclick(channel_number) {
+  // set Pip Selector value so it can be used by other functions
+  pipSelector = channel_number.toString();
 
-  // log selected channel number and set to pipSelector variable
-  pipSelector = document.getElementById("channel_selector").value
-  console.log("Channel " + pipSelector + " has been selected from the dropdown menu")
+  // display multiviewer toggle button
+  document.getElementById('togglemultiviewer').style.display = "inline-block"
+
+  console.log("Channel " + pipSelector + " has been selected from the multiviewer")
 
   if ( pipSelector !== "" ) {
     channelState(pipSelector)
   }
+
+    // Change display and size
+    console.log("unhiding controls")
+    document.getElementById('channel_status').style.display = "inline-block"
+    document.getElementById('channel_control').style.display = "inline-block"
+    document.getElementById('selected_channel_info').style.display = "inline-block"
+    document.getElementById('multiviewer').style.display = "none"
+    multiviewer_status = "off"
+    document.getElementById('channels_body').classList.add('shrinkmultiviewer')
+    document.getElementById('channels_body').classList.remove('expandmultiviewer')
+    document.getElementById('togglecontrols').innerHTML = "Hide Controls"
 
   // Print channel information to channel info box
   // id to populate = channel_info
@@ -300,17 +354,6 @@ document.getElementById("channel_selector").addEventListener('change', (event) =
     }
   }
 
-  /*
-  for (s3_promo in live_event_map[pipSelector].promos){
-    s3_promo_url = new URL(live_event_map[pipSelector].promos[s3_promo].replace("s3://","https://"))
-    promo_bucket = s3_promo_url.hostname
-    promo_key = s3_promo_url.pathname.replace(/^\/+/, '')
-    s3_https_url = 'https://'+promo_bucket+'.s3-'+promo_bucket_region+'.amazonaws.com/'+promo_key
-
-    document.getElementById("channel_info").innerHTML += '<a href="'+s3_https_url+'" target="_blank"> Promo : '+ promo_key +'</a></br>'
-  }
-  */
-
   // initialize the low latency players
   function startPlayers () {
         console.log("starting sdlp players, checking to see if they are loaded already....")
@@ -318,6 +361,7 @@ document.getElementById("channel_selector").addEventListener('change', (event) =
         if ( sldpPlayers.length > 0 ) {
           console.log("players were already loaded, sending to restart function")
           restartPlayers();
+          doStart();
         } else {
           console.log("players not initialized, doing now....")
           doStart();
@@ -330,7 +374,7 @@ document.getElementById("channel_selector").addEventListener('change', (event) =
           sldpPlayers[i].destroy(function () {
             console.log("destroying current instance of player")
             destroyCnt++;
-            if (destroyCnt === sldpPlayers.length) {
+            if (destroyCnt == sldpPlayers.length) {
               sldpPlayers = [];
               doStart();
             }
@@ -364,7 +408,8 @@ document.getElementById("channel_selector").addEventListener('change', (event) =
       console.log("done initializing low latency players.")
       }
   startPlayers()
-});
+}
+
 
 function inputPreview(bumper_number){
   console.log("Going to create presign url for Bumper " + bumper_number)
@@ -383,6 +428,7 @@ function inputPreview(bumper_number){
 }
 
 function pageLoadFunction(){
+
   getConfig()
   console.log("channel map : " + JSON.stringify(live_event_map))
   //console.log("channel start slate: "+ channel_start_slate)
@@ -405,13 +451,103 @@ function pageLoadFunction(){
       window.thumbnail_size = 1
     }
 
+    tableCreate(total_channels)
 
   // Populate the static dropdown elements with data obtained from the channel map json
-  channelDropdownPopulate()
   bumperDropdownPopulate()
 
-  // set channel selector
+  // set channel selector and multiviewer status
   pipSelector = ""
+  multiviewer_status = "on"
+
+
+
+  // Hide Control headers until a selection is made
+  document.getElementById('channel_status').style.display = "none"
+  document.getElementById('channel_control').style.display = "none"
+  document.getElementById('selected_channel_info').style.display = "none"
+  document.getElementById('togglemultiviewer').style.display = "none"
+
+}
+
+function togglecontrols(){
+
+    if ( document.getElementById('channel_control').style.display == "inline-block" && pipSelector == "" ) {
+        console.log("hiding controls")
+        document.getElementById('channel_status').style.display = "none"
+        document.getElementById('channel_control').style.display = "none"
+        document.getElementById('selected_channel_info').style.display = "none"
+        document.getElementById('channels_body').classList.remove('shrinkmultiviewer')
+        document.getElementById('channels_body').classList.add('expandmultiviewer')
+        document.getElementById('togglecontrols').innerHTML = "View Controls"
+        console.log("setting pip selector to 0")
+        pipSelector = ""
+
+
+        // destroying sldp players
+        var destroyCnt = 0;
+        if ( sldpPlayers.length > 0 ) {
+            for (var i = 0; i < sldpPlayers.length; i++) {
+              sldpPlayers[i].destroy(function () {
+                console.log("destroying current instance of player")
+                destroyCnt++;
+              })
+              }
+        } else {
+          console.log("No SLDP player to destroy")
+        }
+    } else if (document.getElementById('channel_control').style.display == "inline-block" && pipSelector != "") {
+       document.getElementById('channel_control').style.display = "none"
+       document.getElementById('selected_channel_info').style.display = "none"
+       document.getElementById('togglecontrols').innerHTML = "View Controls"
+
+    } else if ( document.getElementById('channel_control').style.display == "inline-block" && pipSelector != "" ) {
+        document.getElementById('channel_control').style.display = "inline-block"
+        document.getElementById('selected_channel_info').style.display = "inline-block"
+    } else {
+        console.log("unhiding controls")
+        document.getElementById('channel_status').style.display = "inline-block"
+        document.getElementById('channel_control').style.display = "inline-block"
+        document.getElementById('selected_channel_info').style.display = "inline-block"
+        document.getElementById('channels_body').classList.add('shrinkmultiviewer')
+        document.getElementById('channels_body').classList.remove('expandmultiviewer')
+        document.getElementById('togglecontrols').innerHTML = "Hide Controls"
+    }
+
+}
+
+function togglemultiviewer() {
+  console.log("toggling multiviewer on")
+  pipSelector = ""
+
+
+  // hide controls
+    document.getElementById('channel_status').style.display = "none"
+    document.getElementById('channel_control').style.display = "none"
+    document.getElementById('selected_channel_info').style.display = "none"
+    document.getElementById('channels_body').classList.remove('shrinkmultiviewer')
+    document.getElementById('channels_body').classList.add('expandmultiviewer')
+    document.getElementById('togglecontrols').innerHTML = "View Controls"
+    document.getElementById('togglemultiviewer').style.display = "none"
+    console.log("setting pip selector to 0")
+
+  // destroying sldp players
+  var destroyCnt = 0;
+  if ( sldpPlayers.length > 0 ) {
+      for (var i = 0; i < sldpPlayers.length; i++) {
+        sldpPlayers[i].destroy(function () {
+          console.log("destroying current instance of player")
+          destroyCnt++;
+        })
+        }
+  } else {
+    console.log("No SLDP player to destroy")
+  }
+
+  // display multiviewer
+  document.getElementById('multiviewer').style.display = "inline"
+  multiviewer_status = "on"
+
 
 }
 
@@ -675,7 +811,10 @@ function emlSwitchAction(file, channelid, bucket, takeType, follow, maxresults, 
     putReq.open("PUT", url, false);
     putReq.setRequestHeader("Accept","*/*");
     putReq.send();
-    alert("Command Executed Successfully")
+    var timenow = new Date().toTimeString()
+    document.getElementById("insertconfirmmessage").display = 'block'
+    document.getElementById("insertconfirmmessage").innerHTML = '<h4 style="color:red">Command executed: '+timenow+'</h4>'
+    fadeAway("insertconfirmmessage")
 }
 
 /// EML SWITCH - END
