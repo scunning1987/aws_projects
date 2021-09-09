@@ -23,11 +23,16 @@
         <div id="vu-meter-2" class='vu-meter-wrp'></div>
     </div>
 
+
+
     <div id="controls_body">
+        <div id="clock_wrapper">
+            <div id="clock"></div>
+        </div>
         <div id="channel_selector_wrapper"><button onclick="togglecontrols()" id="togglecontrols">View Controls</button><button id="togglemultiviewer" onclick="togglemultiviewer()">Back to Multiviewer</button><div id="insertconfirmmessage" style="color:red"></div></div>
 
-        <div id="channel_status"><h3>Channel Status:</br> </h3></div>
-        <div id="clock"></div>
+        <div id="channel_status"><h3>Channel Status: </h3></div>
+
         <div id="channel_control" class="common">
             <div id="menu_tabs" class="tab">
                 <button class="tablinks" onclick="mediaLiveControl(event,'chstartstop')">Start/Stop</button>

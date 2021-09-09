@@ -92,6 +92,7 @@ Resources:
             Principal:
               Service:
                 - lambda.amazonaws.com
+                - events.amazonaws.com
             Action:
               - sts:AssumeRole
       Tags:
@@ -184,9 +185,9 @@ Resources:
       Action: lambda:InvokeFunction
       Principal: events.amazonaws.com
       SourceArn: !GetAtt DailyScheduleCleanup.Arn
-      DependsOn:
-        - MediaLiveScheduleCleanup
-        - DailyScheduleCleanup
+    DependsOn:
+      - MediaLiveScheduleCleanup
+      - DailyScheduleCleanup
 
   #################
   ## Custom Resource
@@ -345,6 +346,7 @@ Resources:
       Environment:
         Variables:
           TAGKEY: !Ref MediaLiveScheduleCleanupTag
+
       Tags:
         - Key: StackName
           Value: !Ref AWS::StackName
@@ -663,7 +665,7 @@ Resources:
         Variables:
           BUCKET: !Ref S3Bucket
           CONFIG_KEY: !GetAtt FileMover.channel_map
-          APICTRL: !Sub https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${ApiStage}/dashboard-ctrl
+          APICTRL: !Sub https://${ApiGateway}-${VPCEndpoint}.execute-api.${AWS::Region}.amazonaws.com/${ApiStage}/dashboard-ctrl
       Tags:
         - Key: StackName
           Value: !Ref AWS::StackName
@@ -1033,7 +1035,7 @@ Resources:
     Properties:
       Description: This Event Rule will run at midnight every night to cleanup schedule events in MediaLive Channels that are part of the workflow
       Name: MediaLiveScheduleCleanup
-      RoleArn: ! Role with CloudWatch as trusted entity for executing Lambda function
+      RoleArn: !GetAtt LambdaRole.Arn
       State: ENABLED
       ScheduleExpression: cron(0 0 * * ? *)
       Targets:
@@ -1042,6 +1044,9 @@ Resources:
           RetryPolicy:
             MaximumRetryAttempts: 4
             MaximumEventAgeInSeconds: 600
+    DependsOn:
+      - MediaLiveScheduleCleanup
+      - LambdaRole
 
 #################################
 # Outputs

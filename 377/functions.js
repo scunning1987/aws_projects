@@ -562,7 +562,7 @@ setInterval(function() {
 setInterval(function() {
 
     var timenow = new Date().toTimeString()
-    document.getElementById("clock").innerHTML = timenow
+    document.getElementById("clock").innerHTML = '<h4>'+timenow+'</h4>'
 
     //document.getElementById("clock").innerHTML = (hours + ":" + minutes + ":" + seconds + meridiem);
 
@@ -670,10 +670,10 @@ function channelState() {
       if (request.status === 200) {
         const state_data = JSON.parse(request.responseText);
         console.log("channel state api call response : " + JSON.stringify(state_data))
-        document.getElementById('channel_status').innerHTML = '<h3>Channel Status:</br>'+state_data.status+'</h3>'
+        document.getElementById('channel_status').innerHTML = '<h3>Channel Status: '+state_data.status+'</h3>'
        } else {
          error_message = "Unable to get channel status"
-         document.getElementById('channel_status').innerHTML = '<h3>Channel Status:</br>'+error_message+'</h3>'
+         document.getElementById('channel_status').innerHTML = '<h3>Channel Status: '+error_message+'</h3>'
         // Reached the server, but it returned an error
       }
     }

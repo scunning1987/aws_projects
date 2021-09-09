@@ -44,6 +44,14 @@ td{
   width:100%;
   background-image:linear-gradient(to bottom, #e6f7ff, #ffffff);
 }
+#clock_wrapper{
+  border-bottom:3px solid #cccccc;
+  height:40px;
+  display:block;
+  width:1500px;
+  margin:auto;
+  background-image:linear-gradient(to bottom, #e6f7ff, #ffffff);
+}
 
 #channel_selector_wrapper {
   position:relative;
@@ -55,9 +63,8 @@ td{
 #channel_status {
   position:relative;
   display:inline-block;
-  float:left;
-  height:80px;
   width:400px;
+  float:left;
 }
 
 #channels_body{
@@ -78,17 +85,16 @@ td{
 #channel_control {
   position: relative;
   float:left;
-  margin-top:20px;
+  margin-top:10px;
   height: 320px;
   width: 700px;
 }
 #selected_channel_info {
   float:left;
   position: relative;
-  margin-top:20px;
   height: 320px;
   width: 680px;
-  margin: 20px 0px 0px 110px;
+  margin: 10px 0px 0px 110px;
   overflow:scroll;
   border: 1px solid #ccc;
 }
@@ -122,13 +128,14 @@ td{
 }
 #clock {
     text-align: center;
-    font-size: 12px;
+    font-size: 18px;
     font-family: Verdana;
-    height:80px;
-    display:inline-block;
-    margin-top:20px;
+    width:1500px;
+    margin-top:0px;
+    margin-bottom:0px;
+    padding:0px;
     position:relative;
-    right:0px;
+    color:#595959;
  }
 #password-container {
  position:absolute;
