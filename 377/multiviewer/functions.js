@@ -216,6 +216,10 @@ function chbumperprep(bumper_number){
     channelid = live_event_map[pipSelector].primary_channel_id + ":" + live_event_map[pipSelector].channel_region
     console.log("Submitting API Call to prepare bumper now")
     //emlSwitchAction(s3_bumper_key, channelid, s3_bumper_bucket, "inputPrepare", "", 200, "master", "")
+    var timenow = new Date().toTimeString()
+    document.getElementById("insertconfirmmessage").display = 'block'
+    document.getElementById("insertconfirmmessage").innerHTML = '<h4 style="color:red">Command executed: '+timenow+'</h4>'
+    fadeAway("insertconfirmmessage")
 
     }
 }
