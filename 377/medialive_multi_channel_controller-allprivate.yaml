@@ -138,7 +138,7 @@ Resources:
             Action:
               - mediaconnect:*
             Resource:
-              - !GetAtt LambdaRole.Arn
+              - '*'
           - Effect: Allow
             Action:
               - ec2:describeNetworkInterfaces
