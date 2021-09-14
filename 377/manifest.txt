@@ -11,7 +11,4 @@ https://raw.githubusercontent.com/scunning1987/aws_projects/main/377/sldp-v2.18.
 https://raw.githubusercontent.com/scunning1987/aws_projects/main/377/style.css
 https://raw.githubusercontent.com/scunning1987/aws_projects/main/377/ui.html
 https://raw.githubusercontent.com/scunning1987/aws_projects/main/377/placeholder.jpg
-https://raw.githubusercontent.com/scunning1987/aws_projects/main/377/multiviewer/ui.html
-https://raw.githubusercontent.com/scunning1987/aws_projects/main/377/multiviewer/channel_map.json
-https://raw.githubusercontent.com/scunning1987/aws_projects/main/377/multiviewer/functions.js
-https://raw.githubusercontent.com/scunning1987/aws_projects/main/377/multiviewer/style.css
+https://raw.githubusercontent.com/scunning1987/aws_projects/main/377/mediaconnect-to-ground-cresource.py

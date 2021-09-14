@@ -133,7 +133,23 @@ Resources:
             Action:
               - medialive:*
             Resource:
-                - '*'
+              - '*'
+          - Effect: Allow
+            Action:
+              - mediaconnect:*
+            Resource:
+              - !GetAtt LambdaRole.Arn
+          - Effect: Allow
+            Action:
+              - ec2:describeNetworkInterfaces
+              - ec2:describeSecurityGroups
+              - ec2:describeSubnets
+              - ec2:createNetworkInterface
+              - ec2:createNetworkInterfacePermission
+              - ec2:deleteNetworkInterface
+              - ec2:deleteNetworkInterfacePermission
+            Resource:
+              - '*'
     DependsOn: S3Bucket
 
   LambdaInvokePermissionAPIGateway:
@@ -1086,6 +1102,9 @@ Outputs:
     Description: For the multiviewer, each proxy MediaLive channel should output a thumbnail to this location. Take note of the jpg location as it will be required in the channel_map.json. DO NOT PUT AN EXTENSION IN THE NAME IN MEDIALIVE OR A NAME MODIFIER
     Value: !Sub s3://${S3Bucket}/status_thumbnails/[thumbnail-name]
 
+  LambdaRole:
+    Description: This is the Arn for the role that Lambda assumes for MediaLive and MediaConnect control functions. This may be needed in an external CloudFormation template
+    Value: !GetAtt LambdaRole.Arn
   #APIEndpointURLCTRL:
   #  Description: API Endpoint to control the MediaLive channels. This URL is needed when updating the config
   #  Value: !Sub https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${ApiStage}/dashboard-ctrl
