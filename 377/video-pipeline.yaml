@@ -5,7 +5,7 @@ Parameters:
 
   Prefix:
     Type: String
-    Default: Tie002
+    Default: Tie009
     AllowedPattern: ^[a-zA-Z][a-zA-Z0-9]*
     Description: Prefix to append to all Names Created ; expected value example "TieLine002"
 
@@ -49,7 +49,7 @@ Parameters:
 
   InputProtocol:
     Type: String
-    Default: zixi-push
+    Default: rtp
     AllowedValues:
       - "zixi-push"
       - "rtp-fec"
@@ -60,6 +60,26 @@ Parameters:
   ThumbnailBucket:
     Type: String
     Description: Please enter the S3 bucket name that MediaLive will output its JPEG outputs to. This S3 Bucket MUST be the bucket deployed by the operator dashboard CloudFormation Template
+
+  EC2StreamerSubnetA:
+    Type: String
+    Default: 0.0.0.0
+    Description: Enter the private IP address of the low latency streamer in Subnet A
+
+  EC2StreamerSubnetB:
+    Type: String
+    Default: 0.0.0.0
+    Description: Enter the private IP address of the low latency streamer in Subnet B
+
+  EC2StreamerProxyPort:
+    Type: String
+    Default: 20010
+    Description: Enter the Port number that the EC2 streamer is listening on for this channel
+
+  EC2StreamerDistributionPort:
+    Type: String
+    Default: 21010
+    Description: Enter the Port number that the EC2 streamer is listening on for this channel
 
 Resources:
 ###
@@ -305,7 +325,7 @@ Resources:
             - Url: !Sub "rtp://${MediaFlowOut1.Source.IngestIp}:5000"
         - Id: udp2
           Settings:
-            - Url: !Sub "rtp://ec2-streamer-ip-in-subnet-${Subnet1}:21010"
+            - Url: !Sub "rtp://${EC2StreamerSubnet1}:${EC2StreamerDistributionPort}"
         - Id: jpgoutputs3
           Settings:
             - Url: !Sub "s3ssl://${ThumbnailBucket}/status_thumbnails/${Prefix}"
@@ -607,7 +627,7 @@ Resources:
       Destinations:
         - Id: udp1
           Settings:
-            - Url: !Sub "rtp://ec2-streamer-ip-in-subnet-${Subnet1}:20010"
+            - Url: !Sub "rtp://EC2StreamerSubnet1:${EC2StreamerDistributionPort}"
       EncoderSettings:
         AudioDescriptions:
           - Name: audio_0

@@ -354,6 +354,30 @@ def lambda_handler(event, context):
                 print("Error creating Schedule Action")
                 print(e)
             return response
+        elif type == "drop-prepare":
+            try:
+                response = client.batch_update_schedule(
+                    ChannelId=channelid,
+                    Creates={
+                        'ScheduleActions': [
+                            {
+                                'ActionName': actionname,
+                                'ScheduleActionSettings': {
+                                    'InputPrepareSettings': {},
+                                },
+                                'ScheduleActionStartSettings': {
+                                    'ImmediateModeScheduleActionStartSettings': {}
+
+                                }
+                            },
+                        ]
+                    }
+                )
+                print(json.dumps(response))
+            except Exception as e:
+                print("Error creating Schedule Action")
+                print(e)
+            return response
 
 
         else: # this assumes the type is now LIVE immediate
@@ -463,8 +487,12 @@ def lambda_handler(event, context):
         inputs = list_inputs("dictionary") # return dictionary : file, live, livelist
         channel_info = describe_channel()
         channel_input_attachments = channel_info['InputAttachments']
-        response = batch_update("input-prepare", "", inputs, inputkey,channel_input_attachments)
-        return response
+        drop_prepare = batch_update("drop-prepare", "", inputs, inputkey,channel_input_attachments)
+        prepare_response = batch_update("input-prepare", "", inputs, inputkey,channel_input_attachments)
+        return {
+            "prepare_stop_response":drop_prepare,
+            "prepare_response":prepare_response
+        }
 
     def immediateSwitchLive():
         inputs = list_inputs("dictionary") # return dictionary : file, live, livelist
