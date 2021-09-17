@@ -1,12 +1,12 @@
 # CloudFormation Files to download
-https://raw.githubusercontent.com/scunning1987/aws_projects/main/377/channel_map.json
-https://raw.githubusercontent.com/scunning1987/aws_projects/main/377/channel_map_template.json
-https://raw.githubusercontent.com/scunning1987/aws_projects/main/377/functions.js
-https://raw.githubusercontent.com/scunning1987/aws_projects/main/377/medialive-control-functions.py
-https://raw.githubusercontent.com/scunning1987/aws_projects/main/377/ui-access-proxy.py
-https://raw.githubusercontent.com/scunning1987/aws_projects/main/377/jpg-s3-put-rename.py
-https://raw.githubusercontent.com/scunning1987/aws_projects/main/377/medialive-control-config.py
-https://raw.githubusercontent.com/scunning1987/aws_projects/main/377/sldp-v2.18.1.min.js
-https://raw.githubusercontent.com/scunning1987/aws_projects/main/377/style.css
-https://raw.githubusercontent.com/scunning1987/aws_projects/main/377/ui.html
-https://raw.githubusercontent.com/scunning1987/aws_projects/main/377/placeholder.jpg
+https://raw.githubusercontent.com/scunning1987/aws_projects/main/shows/channel_map.json
+https://raw.githubusercontent.com/scunning1987/aws_projects/main/shows/channel_map_template.json
+https://raw.githubusercontent.com/scunning1987/aws_projects/main/shows/functions.js
+https://raw.githubusercontent.com/scunning1987/aws_projects/main/shows/medialive-control-functions.py
+https://raw.githubusercontent.com/scunning1987/aws_projects/main/shows/ui-access-proxy.py
+https://raw.githubusercontent.com/scunning1987/aws_projects/main/shows/jpg-s3-put-rename.py
+https://raw.githubusercontent.com/scunning1987/aws_projects/main/shows/medialive-control-config.py
+https://raw.githubusercontent.com/scunning1987/aws_projects/main/shows/sldp-v2.18.1.min.js
+https://raw.githubusercontent.com/scunning1987/aws_projects/main/shows/style.css
+https://raw.githubusercontent.com/scunning1987/aws_projects/main/shows/ui.html
+https://raw.githubusercontent.com/scunning1987/aws_projects/main/shows/placeholder.jpg
