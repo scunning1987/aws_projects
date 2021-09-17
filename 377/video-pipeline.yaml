@@ -59,6 +59,7 @@ Parameters:
 
   ThumbnailBucket:
     Type: String
+    Default: ui-s3bucket-fvesqgxwb73y
     Description: Please enter the S3 bucket name that MediaLive will output its JPEG outputs to. This S3 Bucket MUST be the bucket deployed by the operator dashboard CloudFormation Template
 
   EC2StreamerIPSubnet1:
@@ -94,7 +95,17 @@ Parameters:
   IAMRoleForLambda:
     Description: Enter the role arn for Lambda that was created in the UI CloudFormation template, you can get this from the outputs section of the deployed stack
     Type: String
-    Default: arn:aws:iam::301520684698:role/dss30009-LambdaRole-1N4I5N0CH6MG3
+    Default: arn:aws:iam::301520684698:role/ui-LambdaRole-S26J0KXQR7QW
+
+  MediaFlowIngestPort1:
+    Description: Inbound port for MediaConnect Flow1
+    Type: String
+    Default: 5000
+
+  MediaFlowIngestPort2:
+    Description: Inbound port for MediaConnect Flow2
+    Type: String
+    Default: 5000
 
 Resources:
 
@@ -584,7 +595,7 @@ Resources:
         Name: !Sub "${Prefix}MediaFlowIn"
         Description: !Sub ${Prefix} Receiving from ground to AZ ${AZ1}
         Protocol: rtp
-        IngestPort: 5000
+        IngestPort: !Ref MediaFlowIngestPort1
         WhitelistCidr: 0.0.0.0/0
 
   MediaFlowIn2:
@@ -596,7 +607,7 @@ Resources:
         Name: !Sub "${Prefix}MediaFlowIn"
         Description: !Sub ${Prefix} Receiving from ground to AZ ${AZ2}
         Protocol: rtp
-        IngestPort: 5000
+        IngestPort: !Ref MediaFlowIngestPort2
         WhitelistCidr: 0.0.0.0/0
 
   EMX1Interface1:
@@ -612,7 +623,7 @@ Resources:
     Type: AWS::MediaConnect::FlowVpcInterface
     Properties:
       FlowArn: !Ref MediaFlowIn2
-      Name: !Sub "${Prefix}-iface-${AZ1}-${Subnet1}"
+      Name: !Sub "${Prefix}-iface-${AZ1}-${Subnet2}"
       RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaConnectToCreateInVPC}"
       SecurityGroupIds: !Ref MediaConnectInterfaceSG
       SubnetId: !Ref Subnet2
@@ -861,7 +872,7 @@ Resources:
             - Url: !Sub "rtp://${MediaConnectToGround1IPUpdates.flow_source_ip}:${MediaConnectToGround1IPUpdates.flow_source_port}"
         - Id: udp2
           Settings:
-            - Url: !Sub "rtp://${EC2StreamerIPSubnet1}:${EC2StreamerDistributionPort}"
+            - Url: !Sub "rtp://${EC2StreamerIPSubnet1}:${EC2StreamerProxyPort}"
         - Id: jpgoutputs3
           Settings:
             - Url: !Sub "s3://${ThumbnailBucket}/status_thumbnails/${Prefix}"

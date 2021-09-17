@@ -12,6 +12,10 @@ html * {
   font: Verdana, Calibri, Arial;
   font-family: Verdana, Calibri, Arial;
 }
+body {
+  font: Verdana, Calibri, Arial;
+  font-family: Verdana, Calibri, Arial;
+}
 h3 {
   font: Verdana, Calibri, Arial;
   font-family: Verdana, Calibri, Arial;
@@ -59,13 +63,12 @@ td{
 #channels_body{
   display:block;
   width:1500px;
-  height:400px;
   margin:auto;
   border-top:3px solid #cccccc;
   border-bottom:3px solid #cccccc;
 }
 #controls_body{
-  top: 950px;
+  position:relative;
   display:block;
   margin:auto;
   height: 500px;
@@ -127,12 +130,26 @@ td{
     position:relative;
     right:0px;
  }
+#password-container {
+ position:absolute;
+ display:inline;
+ bottom:20px;
+ left:10px;
+}
 
 /* Style the tab */
 .tab {
   overflow: hidden;
   border: 1px solid #ccc;
   background-color: #f1f1f1;
+}
+#togglecontrols{
+  margin-top:20px;
+  display: inline-block;
+}
+#togglemultiviewer{
+margin-top:20px;
+margin-left: 20px;
 }
 
 /* Style the buttons inside the tab */
@@ -169,6 +186,15 @@ td{
   padding: 10px;
   font-size:12px;
 }
+.shrinkmultiviewer{
+  height:400px;
+  overflow-y: scroll;
+}
+.expandmultiviewer{
+  max-height:800px;
+  overflow-y: scroll;
+}
+
 .control_buttons {
   background-color: inherit;
   float: left;

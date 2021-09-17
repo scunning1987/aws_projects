@@ -150,6 +150,11 @@ Resources:
               - ec2:deleteNetworkInterfacePermission
             Resource:
               - '*'
+          - Effect: Allow
+            Action:
+              - iam:PassRole
+            Resource:
+              - !Sub arn:aws:iam::${AWS::AccountId}:role/*
     DependsOn: S3Bucket
 
   LambdaInvokePermissionAPIGateway:
