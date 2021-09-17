@@ -5,8 +5,8 @@
       "proxy_gen_channel": 5034270,
       "channel_friendly_name": "Soccer Channel 1",
       "channel_region": "us-west-2",
-      "low_latency_url_source": "wss://Ec2Streamers-1-1864166850.us-west-2.elb.amazonaws.com/emx/20001",
-      "low_latency_url_medialive": "wss://Ec2Streamers-1-1864166850.us-west-2.elb.amazonaws.com/eml/20001",
+      "low_latency_url_source": "wss://Ec2Streamers-1-1864166850.us-west-2.elb.amazonaws.com/emx/20010",
+      "low_latency_url_medialive": "wss://Ec2Streamers-1-1864166850.us-west-2.elb.amazonaws.com/eml/20010",
       "proxy_thumbnail_name":"placeholder.jpg"
     },
     "2": {
@@ -14,8 +14,8 @@
       "proxy_gen_channel": 5668541,
       "channel_friendly_name": "Soccer Channel 2",
       "channel_region": "us-west-2",
-      "low_latency_url_source": "wss://Ec2Streamers-1-1864166850.us-west-2.elb.amazonaws.com/emx/20001",
-      "low_latency_url_medialive": "wss://Ec2Streamers-1-1864166850.us-west-2.elb.amazonaws.com/eml/20001",
+      "low_latency_url_source": "wss://Ec2Streamers-1-1864166850.us-west-2.elb.amazonaws.com/emx/20020",
+      "low_latency_url_medialive": "wss://Ec2Streamers-1-1864166850.us-west-2.elb.amazonaws.com/eml/20020",
       "proxy_thumbnail_name":"placeholder.jpg"
     },
     "3": {
@@ -23,8 +23,8 @@
       "proxy_gen_channel": 360994,
       "channel_friendly_name": "Soccer Channel 3",
       "channel_region": "us-west-2",
-      "low_latency_url_source": "wss://Ec2Streamers-1-1864166850.us-west-2.elb.amazonaws.com/emx/20001",
-      "low_latency_url_medialive": "wss://Ec2Streamers-1-1864166850.us-west-2.elb.amazonaws.com/eml/20001",
+      "low_latency_url_source": "wss://Ec2Streamers-1-1864166850.us-west-2.elb.amazonaws.com/emx/20030",
+      "low_latency_url_medialive": "wss://Ec2Streamers-1-1864166850.us-west-2.elb.amazonaws.com/eml/20030",
       "proxy_thumbnail_name":"placeholder.jpg"
     },
     "4": {
@@ -32,8 +32,8 @@
       "proxy_gen_channel": 5934475,
       "channel_friendly_name": "Soccer Channel 4",
       "channel_region": "us-west-2",
-      "low_latency_url_source": "wss://Ec2Streamers-1-1864166850.us-west-2.elb.amazonaws.com/emx/20001",
-      "low_latency_url_medialive": "wss://Ec2Streamers-1-1864166850.us-west-2.elb.amazonaws.com/eml/20001",
+      "low_latency_url_source": "wss://Ec2Streamers-1-1864166850.us-west-2.elb.amazonaws.com/emx/20040",
+      "low_latency_url_medialive": "wss://Ec2Streamers-1-1864166850.us-west-2.elb.amazonaws.com/eml/20040",
       "proxy_thumbnail_name":"placeholder.jpg"
     }
   },
