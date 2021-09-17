@@ -1,65 +1,76 @@
 {
   "channel_map": {
     "1": {
-      "primary_channel_id": 6645131,
-      "proxy_gen_channel": 1216932,
+      "primary_channel_id": 4091115,
+      "proxy_gen_channel": 5034270,
       "channel_friendly_name": "Soccer Channel 1",
       "channel_region": "us-west-2",
-      "low_latency_url_source": "wss://internal-ec2-streamer-as-1-1667062841.us-west-2.elb.amazonaws.com/emx/20001",
-      "low_latency_url_medialive": "wss://internal-ec2-streamer-as-1-1667062841.us-west-2.elb.amazonaws.com/eml/20001",
+      "low_latency_url_source": "wss://Ec2Streamers-1-1864166850.us-west-2.elb.amazonaws.com/emx/20001",
+      "low_latency_url_medialive": "wss://Ec2Streamers-1-1864166850.us-west-2.elb.amazonaws.com/eml/20001",
+      "proxy_thumbnail_name":"placeholder.jpg"
+    },
+    "2": {
+      "primary_channel_id": 8253933,
+      "proxy_gen_channel": 5668541,
+      "channel_friendly_name": "Soccer Channel 2",
+      "channel_region": "us-west-2",
+      "low_latency_url_source": "wss://Ec2Streamers-1-1864166850.us-west-2.elb.amazonaws.com/emx/20001",
+      "low_latency_url_medialive": "wss://Ec2Streamers-1-1864166850.us-west-2.elb.amazonaws.com/eml/20001",
+      "proxy_thumbnail_name":"placeholder.jpg"
+    },
+    "3": {
+      "primary_channel_id": 5506676,
+      "proxy_gen_channel": 360994,
+      "channel_friendly_name": "Soccer Channel 3",
+      "channel_region": "us-west-2",
+      "low_latency_url_source": "wss://Ec2Streamers-1-1864166850.us-west-2.elb.amazonaws.com/emx/20001",
+      "low_latency_url_medialive": "wss://Ec2Streamers-1-1864166850.us-west-2.elb.amazonaws.com/eml/20001",
+      "proxy_thumbnail_name":"placeholder.jpg"
+    },
+    "4": {
+      "primary_channel_id": 7235593,
+      "proxy_gen_channel": 5934475,
+      "channel_friendly_name": "Soccer Channel 4",
+      "channel_region": "us-west-2",
+      "low_latency_url_source": "wss://Ec2Streamers-1-1864166850.us-west-2.elb.amazonaws.com/emx/20001",
+      "low_latency_url_medialive": "wss://Ec2Streamers-1-1864166850.us-west-2.elb.amazonaws.com/eml/20001",
       "proxy_thumbnail_name":"placeholder.jpg"
     }
   },
   "bumper_groups": {
-    "Serie A": {
+    "Slates 1": {
       "bumpers": [
         {
           "s3uri": "s3://cunsco-media/vod_slates/promo1.mp4",
-          "description": "Serie A Intro"
+          "description": "Sample Slate 1"
         },
         {
           "s3uri": "s3://cunsco-media/vod_slates/promo1.mp4",
-          "description": "Serie A First Half"
+          "description": "Sample Slate 1"
         },
         {
           "s3uri": "s3://cunsco-media/vod_slates/promo1.mp4",
-          "description": "Serie A Second Half"
+          "description": "Sample Slate 1"
         }
       ]
     },
-    "Europa League": {
+    "Slates 2": {
       "bumpers": [
         {
           "s3uri": "s3://cunsco-media/vod_slates/promo1.mp4",
-          "description": "Europa League Intro"
+          "description": "Sample Slate 1"
         },
         {
           "s3uri": "s3://cunsco-media/vod_slates/promo1.mp4",
-          "description": "Europa League second half"
+          "description": "Sample Slate 1"
         }
       ]
     },
-    "UEFA Champions League": {
+    "Slates 3": {
       "bumpers": [
         {
           "s3uri": "s3://cunsco-media/vod_slates/promo1.mp4",
-          "description": "UEFA CL Bumper"
-        }
-      ]
-    },
-    "Europa Conference League": {
-      "bumpers": [
-        {
-          "s3uri": "s3://cunsco-media/vod_slates/promo1.mp4",
-          "description": "Europa CL Intro"
-        },
-        {
-          "s3uri": "s3://cunsco-media/vod_slates/promo1.mp4",
-          "description": "Europa CL Halftime"
-        },
-        {
-          "s3uri": "s3://cunsco-media/vod_slates/promo1.mp4",
-          "description": "Europe CL Outro"
+          "description": "Sample Slate 1"
         }
       ]
     }
