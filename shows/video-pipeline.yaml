@@ -35,24 +35,24 @@ Parameters:
     Description: Target Role to assign to MediaLive
 
 
-  MediaLiveSGs:
-    Type: List<AWS::EC2::SecurityGroup::Id>
-    Description: Target SGs to apply to MediaLive Inputs
+  #MediaLiveSGs:
+  #  Type: List<AWS::EC2::SecurityGroup::Id>
+  #  Description: Target SGs to apply to MediaLive Inputs
 
   ThumbnailBucket:
     Type: String
-    Default: demo-control-interface-s3bucket-1nzldmlhysr2l
+    Default: medialive-controller-s3bucket-1pb62ie1haq1n
     Description: Please enter the S3 bucket name that MediaLive will output its JPEG outputs to. This S3 Bucket MUST be the bucket deployed by the operator dashboard CloudFormation Template
 
   EC2StreamerA:
     Type: String
     Description: Enter the Local IP address of the EC2 streamer in the first/primary AZ
-    Default: 172.31.18.47
+    Default: 34.221.182.218
 
   EC2StreamerB:
     Type: String
     Description: Enter the Local IP address of the EC2 streamer in the second/secondary AZ
-    Default: 172.31.46.197
+    Default: 34.221.182.218
 
 Resources:
 ###
@@ -69,25 +69,24 @@ Resources:
     Type: AWS::MediaLive::Input
     Properties:
       Name: !Sub "${Prefix}-live-1a"
-      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
       Type: RTP_PUSH
       InputSecurityGroups:
         - !Ref MLSecGroup
+
 
   LiveML1b:
     Type: AWS::MediaLive::Input
     Properties:
       Name: !Sub "${Prefix}-live-1b"
-      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
       Type: RTP_PUSH
       InputSecurityGroups:
         - !Ref MLSecGroup
+
 
   MP4LML1a:
     Type: AWS::MediaLive::Input
     Properties:
       Name: !Sub "${Prefix}-mp4l-1a"
-      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
       Type: MP4_FILE
       Sources:
         - Url: s3://$urlPath$
@@ -96,7 +95,6 @@ Resources:
     Type: AWS::MediaLive::Input
     Properties:
       Name: !Sub "${Prefix}-mp4l-1b"
-      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
       Type: MP4_FILE
       Sources:
         - Url: s3://$urlPath$
@@ -105,7 +103,6 @@ Resources:
     Type: AWS::MediaLive::Input
     Properties:
       Name: !Sub "${Prefix}-mp4c-1a"
-      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
       Type: MP4_FILE
       Sources:
         - Url: s3://$urlPath$
@@ -114,7 +111,6 @@ Resources:
     Type: AWS::MediaLive::Input
     Properties:
       Name: !Sub "${Prefix}-mp4c-1b"
-      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
       Type: MP4_FILE
       Sources:
         - Url: s3://$urlPath$
@@ -123,26 +119,25 @@ Resources:
   LiveML2a:
     Type: AWS::MediaLive::Input
     Properties:
-      Name: !Sub "${Prefix}-live-1a"
-      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      Name: !Sub "${Prefix}-live-2a"
       Type: RTP_PUSH
       InputSecurityGroups:
         - !Ref MLSecGroup
+
 
   LiveML2b:
     Type: AWS::MediaLive::Input
     Properties:
-      Name: !Sub "${Prefix}-live-1b"
-      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      Name: !Sub "${Prefix}-live-2b"
       Type: RTP_PUSH
       InputSecurityGroups:
         - !Ref MLSecGroup
 
+
   MP4LML2a:
     Type: AWS::MediaLive::Input
     Properties:
-      Name: !Sub "${Prefix}-mp4l-1a"
-      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      Name: !Sub "${Prefix}-mp4l-2a"
       Type: MP4_FILE
       Sources:
         - Url: s3://$urlPath$
@@ -150,8 +145,7 @@ Resources:
   MP4LML2b:
     Type: AWS::MediaLive::Input
     Properties:
-      Name: !Sub "${Prefix}-mp4l-1b"
-      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      Name: !Sub "${Prefix}-mp4l-2b"
       Type: MP4_FILE
       Sources:
         - Url: s3://$urlPath$
@@ -159,8 +153,7 @@ Resources:
   MP4CML2a:
     Type: AWS::MediaLive::Input
     Properties:
-      Name: !Sub "${Prefix}-mp4c-1a"
-      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      Name: !Sub "${Prefix}-mp4c-2a"
       Type: MP4_FILE
       Sources:
         - Url: s3://$urlPath$
@@ -168,8 +161,7 @@ Resources:
   MP4CML2b:
     Type: AWS::MediaLive::Input
     Properties:
-      Name: !Sub "${Prefix}-mp4c-1b"
-      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      Name: !Sub "${Prefix}-mp4c-2b"
       Type: MP4_FILE
       Sources:
         - Url: s3://$urlPath$
@@ -177,26 +169,25 @@ Resources:
   LiveML3a:
     Type: AWS::MediaLive::Input
     Properties:
-      Name: !Sub "${Prefix}-live-1a"
-      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      Name: !Sub "${Prefix}-live-3a"
       Type: RTP_PUSH
       InputSecurityGroups:
         - !Ref MLSecGroup
+
 
   LiveML3b:
     Type: AWS::MediaLive::Input
     Properties:
-      Name: !Sub "${Prefix}-live-1b"
-      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      Name: !Sub "${Prefix}-live-3b"
       Type: RTP_PUSH
       InputSecurityGroups:
         - !Ref MLSecGroup
 
+
   MP4LML3a:
     Type: AWS::MediaLive::Input
     Properties:
-      Name: !Sub "${Prefix}-mp4l-1a"
-      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      Name: !Sub "${Prefix}-mp4l-3a"
       Type: MP4_FILE
       Sources:
         - Url: s3://$urlPath$
@@ -204,8 +195,7 @@ Resources:
   MP4LML3b:
     Type: AWS::MediaLive::Input
     Properties:
-      Name: !Sub "${Prefix}-mp4l-1b"
-      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      Name: !Sub "${Prefix}-mp4l-3b"
       Type: MP4_FILE
       Sources:
         - Url: s3://$urlPath$
@@ -213,8 +203,7 @@ Resources:
   MP4CML3a:
     Type: AWS::MediaLive::Input
     Properties:
-      Name: !Sub "${Prefix}-mp4c-1a"
-      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      Name: !Sub "${Prefix}-mp4c-3a"
       Type: MP4_FILE
       Sources:
         - Url: s3://$urlPath$
@@ -222,8 +211,7 @@ Resources:
   MP4CML3b:
     Type: AWS::MediaLive::Input
     Properties:
-      Name: !Sub "${Prefix}-mp4c-1b"
-      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      Name: !Sub "${Prefix}-mp4c-3b"
       Type: MP4_FILE
       Sources:
         - Url: s3://$urlPath$
@@ -231,26 +219,25 @@ Resources:
   LiveML4a:
     Type: AWS::MediaLive::Input
     Properties:
-      Name: !Sub "${Prefix}-live-1a"
-      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      Name: !Sub "${Prefix}-live-4a"
       Type: RTP_PUSH
       InputSecurityGroups:
         - !Ref MLSecGroup
+
 
   LiveML4b:
     Type: AWS::MediaLive::Input
     Properties:
-      Name: !Sub "${Prefix}-live-1b"
-      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      Name: !Sub "${Prefix}-live-4b"
       Type: RTP_PUSH
       InputSecurityGroups:
         - !Ref MLSecGroup
 
+
   MP4LML4a:
     Type: AWS::MediaLive::Input
     Properties:
-      Name: !Sub "${Prefix}-mp4l-1a"
-      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      Name: !Sub "${Prefix}-mp4l-4a"
       Type: MP4_FILE
       Sources:
         - Url: s3://$urlPath$
@@ -258,8 +245,7 @@ Resources:
   MP4LML4b:
     Type: AWS::MediaLive::Input
     Properties:
-      Name: !Sub "${Prefix}-mp4l-1b"
-      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      Name: !Sub "${Prefix}-mp4l-4b"
       Type: MP4_FILE
       Sources:
         - Url: s3://$urlPath$
@@ -267,8 +253,7 @@ Resources:
   MP4CML4a:
     Type: AWS::MediaLive::Input
     Properties:
-      Name: !Sub "${Prefix}-mp4c-1a"
-      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      Name: !Sub "${Prefix}-mp4c-4a"
       Type: MP4_FILE
       Sources:
         - Url: s3://$urlPath$
@@ -276,8 +261,7 @@ Resources:
   MP4CML4b:
     Type: AWS::MediaLive::Input
     Properties:
-      Name: !Sub "${Prefix}-mp4c-1b"
-      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      Name: !Sub "${Prefix}-mp4c-4b"
       Type: MP4_FILE
       Sources:
         - Url: s3://$urlPath$
@@ -293,10 +277,6 @@ Resources:
         Resolution: HD
       LogLevel: DISABLED
       RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
-      Vpc:
-        SecurityGroupIds: !Ref MediaLiveSGs
-        SubnetIds:
-        - !Ref Subnet1
       InputAttachments:
         - InputId: !Ref LiveML1a
           InputAttachmentName: MainStream
@@ -457,10 +437,6 @@ Resources:
         Resolution: HD
       LogLevel: DISABLED
       RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
-      Vpc:
-        SecurityGroupIds: !Ref MediaLiveSGs
-        SubnetIds:
-          - !Ref Subnet2
       InputAttachments:
         - InputId: !Ref LiveML1b
           InputAttachmentName: MainStream
@@ -621,10 +597,6 @@ Resources:
         Resolution: HD
       LogLevel: DISABLED
       RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
-      Vpc:
-        SecurityGroupIds: !Ref MediaLiveSGs
-        SubnetIds:
-          - !Ref Subnet1
       InputAttachments:
         - InputId: !Ref LiveML2a
           InputAttachmentName: MainStream
@@ -785,10 +757,6 @@ Resources:
         Resolution: HD
       LogLevel: DISABLED
       RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
-      Vpc:
-        SecurityGroupIds: !Ref MediaLiveSGs
-        SubnetIds:
-          - !Ref Subnet2
       InputAttachments:
         - InputId: !Ref LiveML2b
           InputAttachmentName: MainStream
@@ -948,10 +916,6 @@ Resources:
         Resolution: HD
       LogLevel: DISABLED
       RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
-      Vpc:
-        SecurityGroupIds: !Ref MediaLiveSGs
-        SubnetIds:
-          - !Ref Subnet1
       InputAttachments:
         - InputId: !Ref LiveML3a
           InputAttachmentName: MainStream
@@ -1112,10 +1076,6 @@ Resources:
         Resolution: HD
       LogLevel: DISABLED
       RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
-      Vpc:
-        SecurityGroupIds: !Ref MediaLiveSGs
-        SubnetIds:
-          - !Ref Subnet2
       InputAttachments:
         - InputId: !Ref LiveML3b
           InputAttachmentName: MainStream
@@ -1276,10 +1236,6 @@ Resources:
         Resolution: HD
       LogLevel: DISABLED
       RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
-      Vpc:
-        SecurityGroupIds: !Ref MediaLiveSGs
-        SubnetIds:
-          - !Ref Subnet1
       InputAttachments:
         - InputId: !Ref LiveML4a
           InputAttachmentName: MainStream
@@ -1440,10 +1396,6 @@ Resources:
         Resolution: HD
       LogLevel: DISABLED
       RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
-      Vpc:
-        SecurityGroupIds: !Ref MediaLiveSGs
-        SubnetIds:
-          - !Ref Subnet2
       InputAttachments:
         - InputId: !Ref LiveML4b
           InputAttachmentName: MainStream
