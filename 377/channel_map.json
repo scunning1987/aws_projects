@@ -66,6 +66,6 @@
   },
   "vod_bucket":"schedule-action-assets",
   "bumper_bucket_region": "us-west-2",
-  "control_api_endpoint_url": "https://16bkfk4pek-vpce-0dc1f90da2dc29a8b.execute-api.us-west-2.amazonaws.com/v1/dashboard-ctrl",
+  "control_api_endpoint_url": "https://mivtymxe5l.execute-api.us-west-2.amazonaws.com/v1/dashboard-ctrl",
   "dashboard_title":"My Streaming Dashboard - v2"
 }
