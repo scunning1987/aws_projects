@@ -1,8 +1,8 @@
 {
   "channel_map": {
     "1": {
-      "primary_channel_id": 6645131,
-      "proxy_gen_channel": 1216932,
+      "primary_channel_id": 3641459,
+      "proxy_gen_channel": 112605,
       "channel_friendly_name": "Soccer Channel 1",
       "channel_region": "us-west-2",
       "low_latency_url_source": "wss://internal-ec2-streamer-as-1-1667062841.us-west-2.elb.amazonaws.com/emx/20001",
