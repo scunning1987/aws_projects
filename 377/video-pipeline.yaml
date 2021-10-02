@@ -1303,4 +1303,4 @@ Outputs:
 
   MediaLiveJPGOutput:
     Description: This is the S3 URL that MediaLive will publish the channel jpg too. (this is required in the channel map json)
-    Value: !Sub "${ThumbnailBucket}/status_thumbnails/${Prefix}.jpg
+    Value: !Sub ${ThumbnailBucket}/status_thumbnails/${Prefix}.jpg
