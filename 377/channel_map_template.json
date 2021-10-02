@@ -1,37 +1,73 @@
 {
   "channel_map": {
     "1": {
-      "primary_channel_id": 4856923,
-      "proxy_gen_channel": 4856923,
-      "channel_friendly_name": "MLS Channel 1",
+      "primary_channel_id": 3641459,
+      "proxy_gen_channel": 112605,
+      "channel_friendly_name": "Soccer Channel 1",
       "channel_region": "us-west-2",
-      "low_latency_url_source": "ws://34.212.225.202:8081/emx/20001",
-      "low_latency_url_medialive": "ws://34.212.225.202:8081/eml/20001",
-      "promos": [
-        "s3://cunsco-media/vod_slates/promo1.mp4",
-        "s3://cunsco-media/vod_slates/promo2.mp4",
-        "s3://cunsco-media/vod_slates/promo3.mp4",
-        "s3://cunsco-media/vod_slates/promo4.mp4"
+      "low_latency_url_source": "wss://internal-ec2-streamer-as-1-1667062841.us-west-2.elb.amazonaws.com/emx/20001",
+      "low_latency_url_medialive": "wss://internal-ec2-streamer-as-1-1667062841.us-west-2.elb.amazonaws.com/eml/20001",
+      "proxy_thumbnail_name":"ui-s3bucket-fvesqgxwb73y/status_thumbnails/ch1.jpg",
+      "mediaconnect_ingress_arn": "",
+      "mediaconnect_egress_arn": ""
+    }
+  },
+  "bumper_groups": {
+    "Serie A": {
+      "bumpers": [
+        {
+          "s3uri": "s3://cunsco-media/vod_slates/promo1.mp4",
+          "description": "Serie A Intro"
+        },
+        {
+          "s3uri": "s3://cunsco-media/vod_slates/promo1.mp4",
+          "description": "Serie A First Half"
+        },
+        {
+          "s3uri": "s3://cunsco-media/vod_slates/promo1.mp4",
+          "description": "Serie A Second Half"
+        }
       ]
     },
-    "2": {
-      "primary_channel_id": 1809084,
-      "proxy_gen_channel": 1809084,
-      "channel_friendly_name": "MotoX Channel 1",
-      "channel_region": "us-west-2",
-      "low_latency_url_source": "ws://34.212.225.202:8081/emx/20002",
-      "low_latency_url_medialive": "ws://34.212.225.202:8081/eml/20002",
-      "promos": [
-        "s3://cunsco-media/vod_slates/promo1.mp4",
-        "s3://cunsco-media/vod_slates/promo2.mp4",
-        "s3://cunsco-media/vod_slates/promo3.mp4",
-        "s3://cunsco-media/vod_slates/promo4.mp4"
+    "Europa League": {
+      "bumpers": [
+        {
+          "s3uri": "s3://cunsco-media/vod_slates/promo1.mp4",
+          "description": "Europa League Intro"
+        },
+        {
+          "s3uri": "s3://cunsco-media/vod_slates/promo1.mp4",
+          "description": "Europa League second half"
+        }
+      ]
+    },
+    "UEFA Champions League": {
+      "bumpers": [
+        {
+          "s3uri": "s3://cunsco-media/vod_slates/promo1.mp4",
+          "description": "UEFA CL Bumper"
+        }
+      ]
+    },
+    "Europa Conference League": {
+      "bumpers": [
+        {
+          "s3uri": "s3://cunsco-media/vod_slates/promo1.mp4",
+          "description": "Europa CL Intro"
+        },
+        {
+          "s3uri": "s3://cunsco-media/vod_slates/promo1.mp4",
+          "description": "Europa CL Halftime"
+        },
+        {
+          "s3uri": "s3://cunsco-media/vod_slates/promo1.mp4",
+          "description": "Europe CL Outro"
+        }
       ]
     }
   },
   "vod_bucket":"schedule-action-assets",
-  "channel_start_slate":"s3://cunsco-east/INTRO.mp4",
-  "promo_bucket_region": "us-west-2",
-  "control_api_endpoint_url": "https://69s54i4koc.execute-api.us-west-2.amazonaws.com/v1/dashboard-ctrl",
-  "dashboard_title":"My Streaming Dashboard"
+  "bumper_bucket_region": "us-west-2",
+  "control_api_endpoint_url": "https://mivtymxe5l.execute-api.us-west-2.amazonaws.com/v1/dashboard-ctrl",
+  "dashboard_title":"My Streaming Dashboard - v2"
 }

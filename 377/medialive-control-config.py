@@ -84,7 +84,7 @@ def lambda_handler(event, context):
         main_keys = ["channel_map","vod_bucket","dashboard_title","control_api_endpoint_url","bumper_bucket_region","bumper_groups"]
         for main_key in list(body_json.keys()):
             if main_key not in main_keys:
-                return api_response(500,{"status":"malformed api body, please refer to the template"})
+                return api_response(500,{"status":"malformed api body, please refer to the template, missing one of %s " % (main_keys)})
 
         # check bumper groups dont exceed 5 bumpers per group
         for bumper_group in body_json['bumper_groups']:
@@ -131,7 +131,7 @@ def lambda_handler(event, context):
                     return api_response(500,{"status":"channel key is not of type dictionary"})
 
                 # Check channel map keys are present
-                channel_keys = ["primary_channel_id","proxy_gen_channel","channel_friendly_name","channel_region","low_latency_url_source","low_latency_url_medialive","proxy_thumbnail_name"]
+                channel_keys = ["primary_channel_id","proxy_gen_channel","channel_friendly_name","channel_region","low_latency_url_source","low_latency_url_medialive","proxy_thumbnail_name","mediaconnect_ingress_arn","mediaconnect_egress_arn"]
                 for channel_key in list(channel_map[channel].keys()):
                     if channel_key not in channel_keys:
                         return api_response(500,{"status":"channel dictionary is missing one or more keys. should contain %s " % (channel_keys)})

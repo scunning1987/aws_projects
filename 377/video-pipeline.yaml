@@ -9,6 +9,10 @@ Parameters:
     AllowedPattern: ^[a-zA-Z][a-zA-Z0-9]*
     Description: Prefix to append to all Names Created ; expected value example "TieLine002"
 
+  VpcToDeployInto:
+    Type: AWS::EC2::VPC::Id
+    Description: VPC Identifier
+
   AZ1:
     Type: AWS::EC2::AvailabilityZone::Name
     Default: us-west-2a
@@ -17,22 +21,12 @@ Parameters:
   Subnet1:
     Type: AWS::EC2::Subnet::Id
     Default: subnet-feb95286
-    Description: Subnet(s) to deploy API Gateway Interface endpoint, This MUST match the target for AZ1 and should be private
-
-  AZ2:
-    Type: AWS::EC2::AvailabilityZone::Name
-    Default: us-west-2b
-    Description: WILL NOT BE USED - See email confluence docs for details - Target AZ for second HA deployment - IMPORTANT this MUST match the target Subnet for SUBNET2a-b
+    Description: Subnet(s) to deploy MediaConnenct and MediaLive VPC Endpoints into
 
   Subnet2:
     Type: AWS::EC2::Subnet::Id
-    Default: subnet-a5eaffee
-    Description: Subnet(s) to deploy API Gateway Interface endpoint, This MUST match the target for AZ2 and should be private
-
-  IAMRoleForMediaLive:
-    Type: String
-    Default: MediaLiveAccessRole
-    Description: Target Role to assign to MediaLive
+    Default: subnet-feb95286
+    Description: Subnet(s) to deploy secondary MediaLive VPC endpoint. this is not used, however it is required in order to create the input in MediaLive
 
   IAMRoleForMediaConnectToCreateInVPC:
     Type: String
@@ -67,11 +61,6 @@ Parameters:
     Default: 0.0.0.0
     Description: Enter the private IP address of the low latency streamer in Subnet A
 
-  EC2StreamerIPSubnet2:
-    Type: String
-    Default: 0.0.0.0
-    Description: Enter the private IP address of the low latency streamer in Subnet B
-
   EC2StreamerProxyPort:
     Type: String
     Default: 20010
@@ -87,11 +76,6 @@ Parameters:
     Default: 0.0.0.0:5000
     Description: Enter the IP and port of the receiver on the ground
 
-  GroundListener2:
-    Type: String
-    Default: placeholder
-    Description: Enter the IP and port of the secondary receiver on the ground
-
   IAMRoleForLambda:
     Description: Enter the role arn for Lambda that was created in the UI CloudFormation template, you can get this from the outputs section of the deployed stack
     Type: String
@@ -102,12 +86,120 @@ Parameters:
     Type: String
     Default: 5000
 
-  MediaFlowIngestPort2:
-    Description: Inbound port for MediaConnect Flow2
-    Type: String
-    Default: 5000
-
 Resources:
+
+  ##
+  ## IAM Role MediaLive / MediaConnect
+  ##
+  IAMRoleForMediaLive:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: MediaLiveAccessRole
+      ManagedPolicyArns:
+        - AmazonS3ReadOnlyAccess
+        - CloudWatchLogsFullAccess
+        - AmazonSSMReadOnlyAccess
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - medialive.amazonaws.com
+            Action:
+              - sts:AssumeRole
+
+  IAMRoleForMediaConnectToCreateInVPC:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: MediaLiveAccessRole
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - mediaconnect.amazonaws.com
+            Action:
+              - sts:AssumeRole
+
+  MediaLiveAccessPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      Roles:
+        - !Ref IAMRoleForMediaLive
+      PolicyName: !Sub ${AWS::StackName}-MediaLiveAccessPolicy
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action:
+              - s3:*
+            Resource:
+              - !Sub arn:aws:s3:::${ThumbnailBucket}/*
+          - Effect: Allow
+            Action:
+              - s3:*
+            Resource:
+              - !Sub arn:aws:s3:::${ThumbnailBucket}
+          - Effect: Allow
+            Action:
+              - mediaconnect:ManagedDescribeFlow
+              - mediaconnect:ManagedAddOutput
+              - mediaconnect:ManagedRemoveOutput
+            Resource:
+              - '*'
+          - Effect: Allow
+            Action:
+              - medialive:*
+            Resource:
+              - '*'
+          - Effect: Allow
+            Action:
+              - mediaconnect:*
+            Resource:
+              - '*'
+          - Effect: Allow
+            Action:
+              - ec2:describeSubnets
+              - ec2:describeNetworkInterfaces
+              - ec2:createNetworkInterface
+              - ec2:createNetworkInterfacePermission
+              - ec2:deleteNetworkInterface
+              - ec2:deleteNetworkInterfacePermission
+              - ec2:describeSecurityGroups
+              - ec2:describeAddresses
+              - ec2:associateAddress
+
+            Resource:
+              - !Sub arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:vpc/${VpcToDeployInto}
+          - Effect: Allow
+            Action:
+              - iam:PassRole
+            Resource:
+              - !Sub arn:aws:iam::${AWS::AccountId}:role/*
+
+  MediaConnnectAccessPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      Roles:
+        - !Ref IAMRoleForMediaConnectToCreateInVPC
+      PolicyName: !Sub ${AWS::StackName}-MediaConnectVPCAccessPolicy
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action:
+              - ec2:describeSubnets
+              - ec2:describeNetworkInterfaces
+              - ec2:createNetworkInterface
+              - ec2:createNetworkInterfacePermission
+              - ec2:deleteNetworkInterface
+              - ec2:deleteNetworkInterfacePermission
+              - ec2:describeSecurityGroups
+              - ec2:describeAddresses
+              - ec2:associateAddress
+
+            Resource:
+              - !Sub arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:vpc/${VpcToDeployInto}
 
   ###
   ###  Custom Resources
@@ -119,7 +211,6 @@ Resources:
       ServiceToken: !GetAtt MediaConnnectToGround.Arn
       FLOWARN: !Ref MediaFlowOut1
       GROUNDLISTENER1: !Ref GroundListener1
-      GROUNDLISTENER2: !Ref GroundListener2
       # Output : flow_source_ip
       # Output: flow_source_port
     DependsOn:
@@ -141,21 +232,6 @@ Resources:
       - MediaFlowIn1
       - EMX1Interface2
       - EMX1Interface1
-
-  MediaConnect2ToMediaLiveIPUpdates:
-    Type: Custom::LambdaInvokerToUpdateMediaConnectIngressFlowOutputs
-    Properties:
-      ServiceToken: !GetAtt MediaConnnectToMediaLive.Arn
-      FLOWARN: !Ref MediaFlowIn2
-      AZ: !Ref AZ2
-      MEDIALIVEDISTRIBUTION: !Ref ML1EMXInputDistribution
-      MEDIALIVEPROXY: !Ref ML1EMXInputProxy
-      # Output : flow_source_ip
-      # Output: flow_source_port
-    DependsOn:
-      - MediaFlowIn2
-      - EMX2Interface2
-      - EMX2Interface1
 
   ###
   ### Lambda
@@ -189,7 +265,6 @@ Resources:
               try:
                   flow_arn = event['ResourceProperties']['FLOWARN']
                   media_connect_flow_output_1 = event['ResourceProperties']['GROUNDLISTENER1']
-                  media_connect_flow_output_2 = event['ResourceProperties']['GROUNDLISTENER2']
               except Exception as e:
 
                   responseData['Status'] = "Unable to get event variables, got exception : %s " % (e)
@@ -243,7 +318,6 @@ Resources:
 
                   flow_outputs = []
                   flow_outputs.append(media_connect_flow_output_1)
-                  flow_outputs.append(media_connect_flow_output_2)
 
                   outputs = []
 
@@ -598,18 +672,6 @@ Resources:
         IngestPort: !Ref MediaFlowIngestPort1
         WhitelistCidr: 0.0.0.0/0
 
-  MediaFlowIn2:
-    Type: AWS::MediaConnect::Flow
-    Properties:
-      AvailabilityZone: !Ref AZ2
-      Name: !Sub "${Prefix}MediaFlowIn2"
-      Source:
-        Name: !Sub "${Prefix}MediaFlowIn"
-        Description: !Sub ${Prefix} Receiving from ground to AZ ${AZ2}
-        Protocol: rtp
-        IngestPort: !Ref MediaFlowIngestPort2
-        WhitelistCidr: 0.0.0.0/0
-
   EMX1Interface1:
     Type: AWS::MediaConnect::FlowVpcInterface
     Properties:
@@ -618,15 +680,6 @@ Resources:
       RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaConnectToCreateInVPC}"
       SecurityGroupIds: !Ref MediaConnectInterfaceSG
       SubnetId: !Ref Subnet1
-
-  EMX2Interface1:
-    Type: AWS::MediaConnect::FlowVpcInterface
-    Properties:
-      FlowArn: !Ref MediaFlowIn2
-      Name: !Sub "${Prefix}-iface-${AZ1}-${Subnet2}"
-      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaConnectToCreateInVPC}"
-      SecurityGroupIds: !Ref MediaConnectInterfaceSG
-      SubnetId: !Ref Subnet2
 
   MediaFlowOut1:
     Type: AWS::MediaConnect::Flow
@@ -640,18 +693,6 @@ Resources:
         IngestPort: 5000
         WhitelistCidr: 0.0.0.0/0
 
-  MediaFlowOut2:
-    Type: AWS::MediaConnect::Flow
-    Properties:
-      AvailabilityZone: !Ref AZ2
-      Name: !Sub "${Prefix}MediaFlowOut2"
-      Source:
-        Name: !Sub "${Prefix}MediaFlowOut"
-        Description: !Sub ${Prefix} Sending to ground from AZ ${AZ2}
-        Protocol: rtp-fec
-        IngestPort: 5000
-        WhitelistCidr: 0.0.0.0/0
-
   EMX1Interface2:
     Type: AWS::MediaConnect::FlowVpcInterface
     Properties:
@@ -660,15 +701,6 @@ Resources:
       RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaConnectToCreateInVPC}"
       SecurityGroupIds: !Ref MediaConnectInterfaceSG
       SubnetId: !Ref Subnet1
-
-  EMX2Interface2:
-    Type: AWS::MediaConnect::FlowVpcInterface
-    Properties:
-      FlowArn: !Ref MediaFlowOut2
-      Name: !Sub "${Prefix}-iface-${AZ1}-${Subnet2}"
-      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaConnectToCreateInVPC}"
-      SecurityGroupIds: !Ref MediaConnectInterfaceSG
-      SubnetId: !Ref Subnet2
 
 ###
 ### MediaLive
@@ -872,7 +904,7 @@ Resources:
             - Url: !Sub "rtp://${MediaConnectToGround1IPUpdates.flow_source_ip}:${MediaConnectToGround1IPUpdates.flow_source_port}"
         - Id: udp2
           Settings:
-            - Url: !Sub "rtp://${EC2StreamerIPSubnet1}:${EC2StreamerProxyPort}"
+            - Url: !Sub "rtp://${EC2StreamerIPSubnet1}:${EC2StreamerDistributionPort}"
         - Id: jpgoutputs3
           Settings:
             - Url: !Sub "s3://${ThumbnailBucket}/status_thumbnails/${Prefix}"
@@ -1174,7 +1206,7 @@ Resources:
       Destinations:
         - Id: udp1
           Settings:
-            - Url: !Sub "rtp://${EC2StreamerIPSubnet1}:${EC2StreamerDistributionPort}"
+            - Url: !Sub "rtp://${EC2StreamerIPSubnet1}:${EC2StreamerProxyPort}"
       EncoderSettings:
         AudioDescriptions:
           - Name: audio_0
@@ -1261,6 +1293,14 @@ Outputs:
     Description: This is the primary ingest IP and port for the Tie line
     Value: !Sub rtp://${MediaConnect1ToMediaLiveIPUpdates.flow_source_ip}:${MediaConnect1ToMediaLiveIPUpdates.flow_source_port}
 
-  GroundToMediaConnect2:
-    Description: This is the secondary ingest IP and port for the Tie line
-    Value: !Sub rtp://${MediaConnect2ToMediaLiveIPUpdates.flow_source_ip}:${MediaConnect2ToMediaLiveIPUpdates.flow_source_port}
+  MediaConnectIngressFlowArn:
+    Description: This is the flow ARN for the MediaConnect ingress flow - ground to cloud (this arn is required in the channel map json)
+      Value: !Ref MediaFlowIn1
+
+  MediaConnectEgressFlowArn:
+    Description: This is the flow ARN for the MediaConnect egress flow - cloud to ground (this arn is required in the channel map json)
+      Value: !Ref MediaFlowOut1
+
+  MediaLiveJPGOutput:
+    Description: This is the S3 URL that MediaLive will publish the channel jpg too. (this is required in the channel map json)
+    Value: !Sub "${ThumbnailBucket}/status_thumbnails/${Prefix}.jpg

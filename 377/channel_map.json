@@ -7,7 +7,9 @@
       "channel_region": "us-west-2",
       "low_latency_url_source": "wss://internal-ec2-streamer-as-1-1667062841.us-west-2.elb.amazonaws.com/emx/20001",
       "low_latency_url_medialive": "wss://internal-ec2-streamer-as-1-1667062841.us-west-2.elb.amazonaws.com/eml/20001",
-      "proxy_thumbnail_name":"ui-s3bucket-fvesqgxwb73y/status_thumbnails/ch1.jpg"
+      "proxy_thumbnail_name":"ui-s3bucket-fvesqgxwb73y/status_thumbnails/ch1.jpg",
+      "mediaconnect_ingress_arn": "",
+      "mediaconnect_egress_arn": ""
     }
   },
   "bumper_groups": {
