@@ -242,7 +242,7 @@ Resources:
               - ec2:describeSubnets
 
             Resource:
-              - !Sub arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:vpc/${VpcToDeployInto}
+              - '*'
           - Effect: Allow
             Action:
               - iam:PassRole
@@ -270,7 +270,7 @@ Resources:
               - ec2:associateAddress
 
             Resource:
-              - !Sub arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:vpc/${VpcToDeployInto}
+              - '*'
 
 
   LambdaInvokePermissionAPIGateway:
