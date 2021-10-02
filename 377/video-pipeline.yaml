@@ -1295,11 +1295,11 @@ Outputs:
 
   MediaConnectIngressFlowArn:
     Description: This is the flow ARN for the MediaConnect ingress flow - ground to cloud (this arn is required in the channel map json)
-      Value: !Ref MediaFlowIn1
+    Value: !Ref MediaFlowIn1
 
   MediaConnectEgressFlowArn:
     Description: This is the flow ARN for the MediaConnect egress flow - cloud to ground (this arn is required in the channel map json)
-      Value: !Ref MediaFlowOut1
+    Value: !Ref MediaFlowOut1
 
   MediaLiveJPGOutput:
     Description: This is the S3 URL that MediaLive will publish the channel jpg too. (this is required in the channel map json)
