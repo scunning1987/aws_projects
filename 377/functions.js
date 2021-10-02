@@ -102,7 +102,7 @@ function chstartstopcontrol(action_type){
       console.log("action type: "+action_type+" for channel ID : "+live_event_map[pipSelector].primary_channel_id)
       // API Call to start/stop channel
       channelStartStop(action_type)
-
+      // do EMX START STOP HERE
       // reset styling on the pip now that the action has been performed
       fadeAway(action_type)
     }

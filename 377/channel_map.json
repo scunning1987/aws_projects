@@ -8,8 +8,8 @@
       "low_latency_url_source": "wss://internal-ec2-streamer-as-1-1667062841.us-west-2.elb.amazonaws.com/emx/20001",
       "low_latency_url_medialive": "wss://internal-ec2-streamer-as-1-1667062841.us-west-2.elb.amazonaws.com/eml/20001",
       "proxy_thumbnail_name":"ui-s3bucket-fvesqgxwb73y/status_thumbnails/ch1.jpg",
-      "mediaconnect_ingress_arn": "",
-      "mediaconnect_egress_arn": ""
+      "mediaconnect_ingress_arn": "arn:aws:mediaconnect:us-west-2:301520684698:flow:1-XFVWAlMLU1tWAw9d-7e4479efd760:Tie202MediaFlowIn1",
+      "mediaconnect_egress_arn": "arn:aws:mediaconnect:us-west-2:301520684698:flow:1-AQdVWwVVWgZUVwxb-8745f489011f:Tie202MediaFlowOut1"
     }
   },
   "bumper_groups": {
