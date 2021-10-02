@@ -590,7 +590,7 @@ Resources:
     Properties:
       FlowArn: !Ref MediaFlowOut1
       Name: !Sub "${Prefix}-iface-${AZ1}-${Subnet1}"
-      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaConnectToCreateInVPC}"
+      RoleArn: !Ref IAMRoleForMediaConnect
       SecurityGroupIds: !Ref MediaConnectInterfaceSG
       SubnetId: !Ref Subnet1
 
