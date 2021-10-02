@@ -148,7 +148,7 @@ Resources:
               - ec2:createNetworkInterfacePermission
               - ec2:deleteNetworkInterface
               - ec2:deleteNetworkInterfacePermission
-              - ec2:DescribeSubnets
+              - ec2:describeSubnets
             Resource:
               - '*'
           - Effect: Allow
