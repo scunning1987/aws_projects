@@ -148,6 +148,7 @@ Resources:
               - ec2:createNetworkInterfacePermission
               - ec2:deleteNetworkInterface
               - ec2:deleteNetworkInterfacePermission
+              - ec2:DescribeSubnets
             Resource:
               - '*'
           - Effect: Allow
@@ -238,6 +239,7 @@ Resources:
               - ec2:describeSecurityGroups
               - ec2:describeAddresses
               - ec2:associateAddress
+              - ec2:DescribeSubnets
 
             Resource:
               - !Sub arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:vpc/${VpcToDeployInto}
