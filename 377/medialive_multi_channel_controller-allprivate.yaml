@@ -204,12 +204,12 @@ Resources:
             Action:
               - s3:*
             Resource:
-              - !Sub arn:aws:s3:::${ThumbnailBucket}/*
+              - !Sub arn:aws:s3:::${S3Bucket}/*
           - Effect: Allow
             Action:
               - s3:*
             Resource:
-              - !Sub arn:aws:s3:::${ThumbnailBucket}
+              - !Sub arn:aws:s3:::${S3Bucket}
           - Effect: Allow
             Action:
               - mediaconnect:ManagedDescribeFlow
