@@ -28,11 +28,6 @@ Parameters:
     Default: subnet-feb95286
     Description: Subnet(s) to deploy secondary MediaLive VPC endpoint. this is not used, however it is required in order to create the input in MediaLive
 
-  IAMRoleForMediaConnectToCreateInVPC:
-    Type: String
-    Default: MediaConnectFullAccessToVPC
-    Description: Role for MediaConnect to assume in order to create VPC resources
-
   MediaLiveSGs:
     Type: List<AWS::EC2::SecurityGroup::Id>
     Description: Target SGs to apply to MediaLive Inputs
