@@ -601,7 +601,7 @@ Resources:
     Type: AWS::MediaLive::Input
     Properties:
       Name: !Sub "${Prefix}-from-MediaConnect-proxy"
-      RoleArn: !Ref IAMRoleForMediaConnect
+      RoleArn: !Ref IAMRoleForMediaLive
       Type: RTP_PUSH
       Vpc:
         SecurityGroupIds: !Ref MediaLiveSGs
