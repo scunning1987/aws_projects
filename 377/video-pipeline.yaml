@@ -81,6 +81,16 @@ Parameters:
     Type: String
     Default: 5000
 
+  IAMRoleForMediaLive:
+    Description: This is the role created by the bumpers ui CloudFormation stack for MEDIALIVE. Paste the ARN in the value field.
+    Type: String
+    Default: arn:aws:iam::xxxxxxxxxxxx:role/MediaLiveAccessRole
+
+  IAMRoleForMediaConnect:
+    Description: This is the role created by the bumpers ui CloudFormation stack for MEDIACONNECT. Paste the ARN in the value field.
+    Type: String
+    Default: arn:aws:iam::xxxxxxxxxxxx:role/MediaConnect
+
 Resources:
 
   ###
@@ -559,7 +569,7 @@ Resources:
     Properties:
       FlowArn: !Ref MediaFlowIn1
       Name: !Sub "${Prefix}-iface-${AZ1}-${Subnet1}"
-      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaConnectToCreateInVPC}"
+      RoleArn: !Ref IAMRoleForMediaConnect
       SecurityGroupIds: !Ref MediaConnectInterfaceSG
       SubnetId: !Ref Subnet1
 
@@ -591,7 +601,7 @@ Resources:
     Type: AWS::MediaLive::Input
     Properties:
       Name: !Sub "${Prefix}-from-MediaConnect-proxy"
-      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      RoleArn: !Ref IAMRoleForMediaConnect
       Type: RTP_PUSH
       Vpc:
         SecurityGroupIds: !Ref MediaLiveSGs
@@ -603,7 +613,7 @@ Resources:
     Type: AWS::MediaLive::Input
     Properties:
       Name: !Sub "${Prefix}-from-MediaConnect-distribution"
-      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      RoleArn: !Ref IAMRoleForMediaConnect
       Type: RTP_PUSH
       Vpc:
         SecurityGroupIds: !Ref MediaLiveSGs
@@ -615,7 +625,7 @@ Resources:
     Type: AWS::MediaLive::Input
     Properties:
       Name: !Sub "${Prefix}-MP4L"
-      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      RoleArn: !Ref IAMRoleForMediaLive
       Type: MP4_FILE
       Sources:
         - Url: s3://$urlPath$
@@ -624,7 +634,7 @@ Resources:
     Type: AWS::MediaLive::Input
     Properties:
       Name: !Sub "${Prefix}-MP4C"
-      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      RoleArn: !Ref IAMRoleForMediaLive
       Type: MP4_FILE
       Sources:
         - Url: s3://$urlPath$
@@ -639,7 +649,7 @@ Resources:
         MaximumBitrate: MAX_50_MBPS
         Resolution: HD
       LogLevel: DISABLED
-      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      RoleArn: !Ref IAMRoleForMediaLive
       Vpc:
         SecurityGroupIds: !Ref MediaLiveSGs
         SubnetIds:
@@ -1034,7 +1044,7 @@ Resources:
         MaximumBitrate: MAX_50_MBPS
         Resolution: HD
       LogLevel: DISABLED
-      RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${IAMRoleForMediaLive}"
+      RoleArn: !Ref IAMRoleForMediaLive
       Vpc:
         SecurityGroupIds: !Ref MediaLiveSGs
         SubnetIds:

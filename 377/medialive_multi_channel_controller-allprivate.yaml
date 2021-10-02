@@ -165,9 +165,9 @@ Resources:
     Properties:
       RoleName: MediaLiveAccessRole-Bumpers
       ManagedPolicyArns:
-        - AmazonS3ReadOnlyAccess
-        - CloudWatchLogsFullAccess
-        - AmazonSSMReadOnlyAccess
+        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+        - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
+        - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
