@@ -157,6 +157,120 @@ Resources:
               - !Sub arn:aws:iam::${AWS::AccountId}:role/*
     DependsOn: S3Bucket
 
+  ##
+  ## IAM Role MediaLive / MediaConnect
+  ##
+  IAMRoleForMediaLive:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: MediaLiveAccessRole-Bumpers
+      ManagedPolicyArns:
+        - AmazonS3ReadOnlyAccess
+        - CloudWatchLogsFullAccess
+        - AmazonSSMReadOnlyAccess
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - medialive.amazonaws.com
+            Action:
+              - sts:AssumeRole
+
+  IAMRoleForMediaConnectToCreateInVPC:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: MediaConnectAccessRole-Bumpers
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - mediaconnect.amazonaws.com
+            Action:
+              - sts:AssumeRole
+
+  MediaLiveAccessPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      Roles:
+        - !Ref IAMRoleForMediaLive
+      PolicyName: !Sub ${AWS::StackName}-MediaLiveAccessPolicy
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action:
+              - s3:*
+            Resource:
+              - !Sub arn:aws:s3:::${ThumbnailBucket}/*
+          - Effect: Allow
+            Action:
+              - s3:*
+            Resource:
+              - !Sub arn:aws:s3:::${ThumbnailBucket}
+          - Effect: Allow
+            Action:
+              - mediaconnect:ManagedDescribeFlow
+              - mediaconnect:ManagedAddOutput
+              - mediaconnect:ManagedRemoveOutput
+            Resource:
+              - '*'
+          - Effect: Allow
+            Action:
+              - medialive:*
+            Resource:
+              - '*'
+          - Effect: Allow
+            Action:
+              - mediaconnect:*
+            Resource:
+              - '*'
+          - Effect: Allow
+            Action:
+              - ec2:describeSubnets
+              - ec2:describeNetworkInterfaces
+              - ec2:createNetworkInterface
+              - ec2:createNetworkInterfacePermission
+              - ec2:deleteNetworkInterface
+              - ec2:deleteNetworkInterfacePermission
+              - ec2:describeSecurityGroups
+              - ec2:describeAddresses
+              - ec2:associateAddress
+
+            Resource:
+              - !Sub arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:vpc/${VpcToDeployInto}
+          - Effect: Allow
+            Action:
+              - iam:PassRole
+            Resource:
+              - !Sub arn:aws:iam::${AWS::AccountId}:role/*
+
+  MediaConnnectAccessPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      Roles:
+        - !Ref IAMRoleForMediaConnectToCreateInVPC
+      PolicyName: !Sub ${AWS::StackName}-MediaConnectVPCAccessPolicy
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action:
+              - ec2:describeSubnets
+              - ec2:describeNetworkInterfaces
+              - ec2:createNetworkInterface
+              - ec2:createNetworkInterfacePermission
+              - ec2:deleteNetworkInterface
+              - ec2:deleteNetworkInterfacePermission
+              - ec2:describeSecurityGroups
+              - ec2:describeAddresses
+              - ec2:associateAddress
+
+            Resource:
+              - !Sub arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:vpc/${VpcToDeployInto}
+
+
   LambdaInvokePermissionAPIGateway:
     Type: AWS::Lambda::Permission
     Properties:
@@ -1110,6 +1224,15 @@ Outputs:
   LambdaRole:
     Description: This is the Arn for the role that Lambda assumes for MediaLive and MediaConnect control functions. This may be needed in an external CloudFormation template
     Value: !GetAtt LambdaRole.Arn
+
+  MediaLiveAccessRole:
+    Description: This is the role that should be used by MediaLive
+    Value: !GetAtt IAMRoleForMediaLive.Arn
+
+  MediaConnectAccessRole:
+    Description: This is the role that should be used by MediaConnect
+    Value: !GetAtt IAMRoleForMediaConnectToCreateInVPC.Arn
+
   #APIEndpointURLCTRL:
   #  Description: API Endpoint to control the MediaLive channels. This URL is needed when updating the config
   #  Value: !Sub https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${ApiStage}/dashboard-ctrl
