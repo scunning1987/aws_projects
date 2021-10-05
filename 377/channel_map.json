@@ -1,8 +1,8 @@
 {
   "channel_map": {
     "1": {
-      "primary_channel_id": 3641459,
-      "proxy_gen_channel": 112605,
+      "primary_channel_id": 3480897,
+      "proxy_gen_channel": 9424650,
       "channel_friendly_name": "Soccer Channel 1",
       "channel_region": "us-west-2",
       "low_latency_url_source": "wss://internal-ec2-streamer-as-1-1667062841.us-west-2.elb.amazonaws.com/emx/20001",
@@ -68,6 +68,6 @@
   },
   "vod_bucket":"schedule-action-assets",
   "bumper_bucket_region": "us-west-2",
-  "control_api_endpoint_url": "https://mivtymxe5l.execute-api.us-west-2.amazonaws.com/v1/dashboard-ctrl",
+  "control_api_endpoint_url": "https://j4b8bhx380-vpce-07845f22b3628bd5a.execute-api.us-west-2.amazonaws.com/v1/dashboard-ctrl",
   "dashboard_title":"My Streaming Dashboard - v2"
 }

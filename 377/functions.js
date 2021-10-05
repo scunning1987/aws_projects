@@ -99,9 +99,21 @@ function chstartstopcontrol(action_type){
   if (window.confirm("Do you really want to "+action_type+" this channel?")) {
 
       document.getElementById(action_type).classList.add('pressedbutton');
-      console.log("action type: "+action_type+" for channel ID : "+live_event_map[pipSelector].primary_channel_id)
-      // API Call to start/stop channel
-      channelStartStop(action_type)
+
+        var mediaconnect_flow_arns = {
+                  "ingress":live_event_map[pipSelector].mediaconnect_ingress_arn,
+                  "egress":live_event_map[pipSelector].mediaconnect_egress_arn
+                }
+        console.log(JSON.stringify(mediaconnect_flow_arns))
+        var mediaconnect_flow_arns_b64 = btoa(JSON.stringify(mediaconnect_flow_arns));
+
+        // API Call to start/stop channel - proxy
+        console.log("action type: "+action_type+" for channel ID : "+live_event_map[pipSelector].primary_channel_id)
+        channelStartStop(action_type,live_event_map[pipSelector].primary_channel_id,mediaconnect_flow_arns_b64)
+        console.log("action type: "+action_type+" for channel ID : "+live_event_map[pipSelector].proxy_gen_channel)
+        channelStartStop(action_type,live_event_map[pipSelector].proxy_gen_channel,"")
+
+
       // do EMX START STOP HERE
       // reset styling on the pip now that the action has been performed
       fadeAway(action_type)
@@ -824,39 +836,36 @@ function emlSwitchAction(file, channelid, bucket, takeType, follow, maxresults, 
 
 /// EML CHANNEL START/STOP - START
 
-function channelStartStop(startstop){
+function channelStartStop(startstop,channelid,flows){
 
     if (pipSelector.length < 1){
       alert("Select a channel first...");
       return;
     }
+    console.log("channel start-stop action api call: initializing")
 
-    channels = [ live_event_map[pipSelector].primary_channel_id , live_event_map[pipSelector].proxy_gen_channel ]
 
-    for ( i in channels ) {
+    var param1 = "awsaccount=master";
+    var param2 = "&functiontorun=channelStartStop"
+    var param3 = "&channelid="+channelid;
+    var param4 = "&maxresults=200";
+    var param5 = "&bucket=bucket:path/key.mp4";
+    var param6 = "&input="+startstop;
+    var param7 = "&follow="+flows;
+    var param8 = "&duration=";
+    var url = apiendpointurl+"?"+param1+param2+param3+param4+param5+param6+param7+param8
+    console.log("channel start-stop action api call - executing : " + channelid)
 
-        console.log("channel start-stop action api call: initializing")
-        console.log("performing api action on channel id : " + channels[i])
-        channelid = channels[i] + ":" + live_event_map[pipSelector].channel_region;
+    var putReq = new XMLHttpRequest();
+    putReq.open("PUT", url, true);
+    putReq.setRequestHeader("Accept","*/*");
+    putReq.send();
 
-        var param1 = "awsaccount=master";
-        var param2 = "&functiontorun=channelStartStop"
-        var param3 = "&channelid="+channelid;
-        var param4 = "&maxresults=200";
-        var param5 = "&bucket=bucket:path/key.mp4";
-        var param6 = "&input="+startstop;
-        var param7 = "&follow=";
-        var param8 = "&duration=";
-        var url = apiendpointurl+"?"+param1+param2+param3+param4+param5+param6+param7+param8
-        console.log("channel start-stop action api call - executing : " + channelid)
-
-        var putReq = new XMLHttpRequest();
-        putReq.open("PUT", url, false);
-        putReq.setRequestHeader("Accept","*/*");
-        putReq.send();
-
-    }
+    if (putReq.status === 500 || putReq.status === 502) {
+    console.log("Something went wrong")
+    } else {
     alert("Channel state is changing, please be patient. This may take 60-90 seconds")
+    }
 }
 
 /// EML CHANNEL START/STOP - END
