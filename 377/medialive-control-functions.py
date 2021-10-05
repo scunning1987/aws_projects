@@ -20,6 +20,7 @@ import boto3
 import datetime
 import random
 import time
+import base64
 import os
 
 def lambda_handler(event, context):
@@ -44,7 +45,7 @@ def lambda_handler(event, context):
     input = str(event['input'])
     inputkey = event['input'].replace("%2F","/")
     functiontorun = str(event['functiontorun'])
-    follow = str(event['follow'])
+    follow = event['follow']
 
     ###
     flow_action = event['functiontorun']
@@ -582,6 +583,8 @@ def lambda_handler(event, context):
     def channelStartStop():
         ## Check channel status
         ## If status is not what the desired action is, perform the action
+        # channel_state_change_exceptions
+
         channel_summary = client.describe_channel(ChannelId=channelid)
         channel_input_attachments = channel_summary['InputAttachments']
         channel_status = channel_summary['State']
@@ -601,11 +604,36 @@ def lambda_handler(event, context):
                     return "Couldnt change input to slate"
                 '''
                 ## start api
+
+                if follow != "":
+                    # Need to start flows
+                    try:
+                        emx_json = json.loads(base64.b64decode(follow))
+                        ingress_arn = emx_json['ingress']
+                        egress_arn = emx_json['egress']
+                    except Exception as e:
+                        channel_state_change_exceptions.append(e)
+                        return e
+
+                    #startFlow
+                    startFlow(ingress_arn)
+                    startFlow(egress_arn)
+
+                    if len(channel_state_change_exceptions) > 0:
+                        return
+
+
+                # keys = ingress / egress
+
                 try:
                     response = client.start_channel(ChannelId=channelid)
                     return response
                 except Exception as e:
+                    channel_state_change_exceptions.append(e)
                     return e
+
+
+
             else:
                 return "Channel is already Running"
 
@@ -614,10 +642,27 @@ def lambda_handler(event, context):
                 return "Channel already stopping or stopped"
             else:
                 # stop api
+
+                if follow != "":
+                    # Need to start flows
+                    try:
+                        emx_json = json.loads(base64.b64decode(follow))
+                        ingress_arn = emx_json['ingress']
+                        egress_arn = emx_json['egress']
+                    except Exception as e:
+                        channel_state_change_exceptions.append(e)
+                        return e
+
+                    #startFlow
+                    stopFlow(ingress_arn)
+                    stopFlow(egress_arn)
+
+
                 try:
                     response = client.stop_channel(ChannelId=channelid)
                     return response
                 except Exception as e:
+                    channel_state_change_exceptions.append(e)
                     return e
 
     def channelState():
@@ -691,7 +736,10 @@ def lambda_handler(event, context):
         return channelalertlist
 
     def describeChannelState():
-        channel_info = describe_channel()
+        try:
+            channel_info = describe_channel()
+        except Exception as e:
+            return e
         try:
             state = {"status":channel_info['State']}
             return state
@@ -750,8 +798,50 @@ def lambda_handler(event, context):
 
     def startFlow(flow_arn):
         print("start flow function")
-        response = emxclient.start_flow(FlowArn=flow_arn)
-        return response
+
+        try:
+            describe_flow_response = emxclient.describe_flow(FlowArn=flow_arn)
+        except Exception as e:
+            channel_state_change_exceptions.append(e)
+            return "Could not get flow details"
+
+        if describe_flow_response['Flow']['Status'] == "STANDBY":
+
+            try:
+                response = emxclient.start_flow(FlowArn=flow_arn)
+                return response
+            except Exception as e:
+                channel_state_change_exceptions.append(e)
+                return "Could not start flow"
+
+
+        else:
+            return "INFO: Flow is active, nothing to do"
+
+
+
+    def stopFlow(flow_arn):
+        print("stop flow function")
+
+        try:
+            describe_flow_response = emxclient.describe_flow(FlowArn=flow_arn)
+        except Exception as e:
+            channel_state_change_exceptions.append(e)
+            return "Could not get flow details"
+
+        if describe_flow_response['Flow']['Status'] == "STANDBY" or describe_flow_response['Flow']['Status'] == "STOPPING":
+
+            return "INFO: Flow is idle, nothing to do"
+
+        else:
+
+            try:
+                response = emxclient.stop_flow(FlowArn=flow_arn)
+                return response
+            except Exception as e:
+                channel_state_change_exceptions.append(e)
+                return "Could not start flow"
+
 
     def listFlows():
         print("list flows")
@@ -902,8 +992,16 @@ def lambda_handler(event, context):
         response = scteInject()
         return api_response(200,response)
     elif functiontorun == "channelStartStop":
+        channel_state_change_exceptions = []
+        channel_state_change_exceptions.clear()
+
         response = channelStartStop()
-        return api_response(200,response)
+
+        if len(channel_state_change_exceptions) > 0:
+            return api_response(500,channel_state_change_exceptions)
+        else:
+            return api_response(200,response)
+
     elif functiontorun == "channelState":
         response = channelState()
         return api_response(200,response)
