@@ -109,9 +109,9 @@ function chstartstopcontrol(action_type){
 
         // API Call to start/stop channel - proxy
         console.log("action type: "+action_type+" for channel ID : "+live_event_map[pipSelector].primary_channel_id)
-        channelStartStop(action_type,live_event_map[pipSelector].primary_channel_id,mediaconnect_flow_arns_b64)
+        channelStartStop(action_type,live_event_map[pipSelector].primary_channel_id+":"+live_event_map[pipSelector].channel_region,mediaconnect_flow_arns_b64)
         console.log("action type: "+action_type+" for channel ID : "+live_event_map[pipSelector].proxy_gen_channel)
-        channelStartStop(action_type,live_event_map[pipSelector].proxy_gen_channel,"")
+        channelStartStop(action_type,live_event_map[pipSelector].proxy_gen_channel+":"+live_event_map[pipSelector].channel_region,"")
 
 
       // do EMX START STOP HERE
