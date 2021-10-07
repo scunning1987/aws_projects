@@ -38,7 +38,7 @@ def lambda_handler(event, context):
         station_code = str(event['channelid'].split(":")[0])
     else:
         channelid = str(event['channelid'])
-        region = "us-west-2"
+        region = "us-east-1"
         station_code = event['channelid']
     maxresults = int(event['maxresults'])
     awsacc = event['awsaccount']
