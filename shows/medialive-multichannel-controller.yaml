@@ -5,23 +5,50 @@
 ## Parameters - User Input
 Parameters:
 
-  VpcToDeployInto:
-    Type: AWS::EC2::VPC::Id
-    Description: VPC Identifier
-
   SubnetToDeployApiInterface:
     Type: List<AWS::EC2::Subnet::Id>
     Description: Subnet(s) to deploy API Gateway Interface endpoint
-
-  InterfaceEndpointSecurityGroups:
-    Type: List<AWS::EC2::SecurityGroup::Id>
-    Description: Select one or more security groups to apply to the API Gateway Interface endpoint
 
   S3PolicyForMediaAccess:
     Description: Policy that gives Lambda access to customer managed S3 Bucket
     Type: String
     AllowedPattern: ^arn:aws:iam::.+ #(\d{12}|aws):policy/:+
     Default: arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+
+  Prefix:
+    Type: String
+    Default: tradeshow
+    AllowedPattern: ^[a-zA-Z][a-zA-Z0-9]*
+    Description: Prefix to append to all Names Created ; expected value example "demo"
+
+  AZ1:
+    Type: AWS::EC2::AvailabilityZone::Name
+    Default: us-west-2a
+    Description: Target AZ for first HA deployment - IMPORTANT this MUST match the target Subnet for SUBNET1a-b
+
+  Subnet1:
+    Type: AWS::EC2::Subnet::Id
+    Default: subnet-88801af0
+    Description: Subnet(s) to deploy API Gateway Interface endpoint, This MUST match the target for AZ1 and should be private
+
+  AZ2:
+    Type: AWS::EC2::AvailabilityZone::Name
+    Default: us-west-2b
+    Description: Target AZ for second HA deployment - IMPORTANT this MUST match the target Subnet for SUBNET2a-b
+
+  Subnet2:
+    Type: AWS::EC2::Subnet::Id
+    Default: subnet-e23bbfa8
+    Description: Subnet(s) to deploy API Gateway Interface endpoint, This MUST match the target for AZ2 and should be private
+
+  VPCCidr:
+    Type: String
+    Default: 172.31.0.0/16
+    Description: Enter the CIDR for the VPC, this will be used in the security group rule to allow MediaConnect, MediaLive, and EC2 to stream freely to each other
+
+  VpcToDeployInto:
+    Type: AWS::EC2::VPC::Id
+    Description: VPC Identifier
 
 ## Resources
 Resources:
@@ -130,6 +157,115 @@ Resources:
                 - '*'
     DependsOn: S3Bucket
 
+  MediaLiveAccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: MediaLiveAccessRole-Bumpers
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+        - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
+        - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - medialive.amazonaws.com
+            Action:
+              - sts:AssumeRole
+
+  MediaLiveAccessPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      Roles:
+        - !Ref MediaLiveAccessRole
+      PolicyName: !Sub ${AWS::StackName}-MediaLiveAccessPolicy
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action:
+              - s3:*
+            Resource:
+              - !Sub arn:aws:s3:::${S3Bucket}/*
+          - Effect: Allow
+            Action:
+              - s3:*
+            Resource:
+              - !Sub arn:aws:s3:::${S3Bucket}
+          - Effect: Allow
+            Action:
+              - mediaconnect:ManagedDescribeFlow
+              - mediaconnect:ManagedAddOutput
+              - mediaconnect:ManagedRemoveOutput
+            Resource:
+              - '*'
+          - Effect: Allow
+            Action:
+              - medialive:*
+            Resource:
+              - '*'
+          - Effect: Allow
+            Action:
+              - mediaconnect:*
+            Resource:
+              - '*'
+          - Effect: Allow
+            Action:
+              - ec2:describeSubnets
+              - ec2:describeNetworkInterfaces
+              - ec2:createNetworkInterface
+              - ec2:createNetworkInterfacePermission
+              - ec2:deleteNetworkInterface
+              - ec2:deleteNetworkInterfacePermission
+              - ec2:describeSecurityGroups
+              - ec2:describeAddresses
+              - ec2:associateAddress
+              - ec2:describeSubnets
+            Resource:
+              - '*'
+          - Effect: Allow
+            Action:
+              - iam:PassRole
+            Resource:
+              - !Sub arn:aws:iam::${AWS::AccountId}:role/*
+
+  MediaConnectAccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: MediaConnectAccessRole-Bumpers
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - mediaconnect.amazonaws.com
+            Action:
+              - sts:AssumeRole
+
+  MediaConnectAccessPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      Roles:
+        - !Ref MediaConnectAccessRole
+      PolicyName: !Sub ${AWS::StackName}-MediaConnectVPCAccessPolicy
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action:
+              - ec2:describeSubnets
+              - ec2:describeNetworkInterfaces
+              - ec2:createNetworkInterface
+              - ec2:createNetworkInterfacePermission
+              - ec2:deleteNetworkInterface
+              - ec2:deleteNetworkInterfacePermission
+              - ec2:describeSecurityGroups
+              - ec2:describeAddresses
+              - ec2:associateAddress
+            Resource:
+              - '*'
+
   LambdaInvokePermissionAPIGateway:
     Type: AWS::Lambda::Permission
     Properties:
@@ -171,6 +307,17 @@ Resources:
     DependsOn:
       - S3Bucket
       - ThumbnailS3PutRename
+
+  LambdaInvokedByEventBridge:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt MediaLiveScheduleCleanup.Arn
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt DailyScheduleCleanup.Arn
+    DependsOn:
+      - MediaLiveScheduleCleanup
+      - DailyScheduleCleanup
 
   #################
   ## Custom Resource
@@ -241,7 +388,6 @@ Resources:
   MediaLiveControlConfig:
     Type: AWS::Lambda::Function
     Properties:
-      #FunctionName: !Sub ${DeploymentName}-medialive-html5-api-handler
       Description: Channel configuration API handler
       Role: !GetAtt LambdaRole.Arn
       Runtime: python3.8
@@ -307,6 +453,31 @@ Resources:
       Code:
         S3Bucket: !Ref S3Bucket
         S3Key: !GetAtt FileMover.jpg-s3-put-rename
+      Tags:
+        - Key: StackName
+          Value: !Ref AWS::StackName
+    DependsOn:
+      - S3Bucket
+      - LambdaRole
+      - FileCopier
+      - FileMover
+
+  MediaLiveScheduleCleanup:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Function to cleanup old MediaLive schedule actions every day
+      Role: !GetAtt LambdaRole.Arn
+      Runtime: python3.8
+      Handler: index.lambda_handler
+      Timeout: 580
+      MemorySize: 10240
+      Code:
+        S3Bucket: !Ref S3Bucket
+        S3Key: !GetAtt FileMover.medialive-schedule-cleanup
+      Environment:
+        Variables:
+          TAGKEY: MediaLive-Demo-Workflow
+
       Tags:
         - Key: StackName
           Value: !Ref AWS::StackName
@@ -635,7 +806,6 @@ Resources:
     DependsOn:
       - ApiGateway
 
-
   S3BucketNotificationLambda:
     Type: 'AWS::Lambda::Function'
     Properties:
@@ -949,19 +1119,114 @@ Resources:
       - ApiGateway
 
     #################
-    ## VPC
+    ## EventBridge
     #################
 
-  VPCEndpoint:
-    Type: AWS::EC2::VPCEndpoint
+  DailyScheduleCleanup:
+    Type: AWS::Events::Rule
     Properties:
-      ServiceName: !Sub com.amazonaws.${AWS::Region}.execute-api
-      PrivateDnsEnabled: true
-      SubnetIds: !Ref SubnetToDeployApiInterface
-      VpcId: !Ref VpcToDeployInto
-      VpcEndpointType : Interface
-      SecurityGroupIds: !Ref InterfaceEndpointSecurityGroups
+      Description: This Event Rule will run at midnight every night to cleanup schedule events in MediaLive Channels that are part of the workflow
+      Name: MediaLiveScheduleCleanup
+      RoleArn: !GetAtt LambdaRole.Arn
+      State: ENABLED
+      ScheduleExpression: cron(0 0 * * ? *)
+      Targets:
+        - Arn: !GetAtt MediaLiveScheduleCleanup.Arn
+          Id: LambdaForMediaLiveCleanup
+          RetryPolicy:
+            MaximumRetryAttempts: 4
+            MaximumEventAgeInSeconds: 600
+    DependsOn:
+      - MediaLiveScheduleCleanup
+      - LambdaRole
 
+
+  ###
+  ###  EC2
+  ###
+  # Low Latency Streamer A
+  EC2StreamerDeployA:
+    Type: AWS::EC2::Instance
+    Properties:
+      AvailabilityZone: !Ref AZ1
+      InstanceType: t2.large
+      SecurityGroupIds:
+        - !Ref EC2SecurityGroupInt
+        - !Ref EC2SecurityGroupCloudFront
+      SubnetId: !Ref Subnet1
+      ImageId: ami-013a129d325529d4d
+      Tags:
+        - Key: Name
+          Value: EC2LowLatencyStreamerA
+      UserData:
+        Fn::Base64:
+          |
+          #!/bin/bash
+          sudo bash -c 'echo -e "[nimble]\nname= Nimble Streamer repository\nbaseurl=http://nimblestreamer.com/centos/7/\$basearch\nenabled=1\ngpgcheck=1\ngpgkey=http://nimblestreamer.com/gpg.key\n" > /etc/yum.repos.d/nimble.repo'
+          sudo yum -y makecache
+          sudo yum -y install nimble
+          sudo yum -y install wget
+          sudo wget https://raw.githubusercontent.com/scunning1987/aws_projects/main/377/ec2_stream_builder.py
+          sudo python ec2_stream_builder.py 8 20000
+          sudo sed -i 's/port\ =\ 8081/port\ =\ 80/g' /etc/nimble/nimble.conf
+          sudo bash -c 'echo "management_listen_interfaces = *" >> /etc/nimble/nimble.conf'
+          sudo chown -R nimble:nimble /etc/ssl/private
+          sudo service nimble start
+
+  # Low Latency Streamer B
+  EC2StreamerDeployB:
+    Type: AWS::EC2::Instance
+    Properties:
+      AvailabilityZone: !Ref AZ2
+      InstanceType: t2.large
+      SecurityGroupIds:
+        - !Ref EC2SecurityGroupInt
+        - !Ref EC2SecurityGroupCloudFront
+      SubnetId: !Ref Subnet2
+      ImageId: ami-013a129d325529d4d
+      Tags:
+        - Key: Name
+          Value: EC2LowLatencyStreamerB
+      UserData:
+        Fn::Base64:
+          |
+          #!/bin/bash
+          sudo bash -c 'echo -e "[nimble]\nname= Nimble Streamer repository\nbaseurl=http://nimblestreamer.com/centos/7/\$basearch\nenabled=1\ngpgcheck=1\ngpgkey=http://nimblestreamer.com/gpg.key\n" > /etc/yum.repos.d/nimble.repo'
+          sudo yum -y makecache
+          sudo yum -y install nimble
+          sudo yum -y install wget
+          sudo wget https://raw.githubusercontent.com/scunning1987/aws_projects/main/377/ec2_stream_builder.py
+          sudo python ec2_stream_builder.py 8 20000
+          sudo sed -i 's/port\ =\ 8081/port\ =\ 80/g' /etc/nimble/nimble.conf
+          sudo bash -c 'echo "management_listen_interfaces = *" >> /etc/nimble/nimble.conf'
+          sudo chown -R nimble:nimble /etc/ssl/private
+          sudo service nimble start
+
+  # Security Group - Internal Streaming Video
+
+  EC2SecurityGroupInt:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: This SG is for internal VPC streaming applications only
+      GroupName: secgroup-medialivehtml5-vpcvideo
+      SecurityGroupIngress:
+        - CidrIp: !Ref VPCCidr
+          FromPort: -1
+          IpProtocol: -1
+      VpcId: !Ref VpcToDeployInto
+
+  # Security Group - HTTP Open for CloudFront
+  EC2SecurityGroupCloudFront:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: This SG is for the EC2 to allow HTTP access externally. Requests should originate from CloudFront
+      GroupName: secgroup-medialivehtml5-vpccdn
+      SecurityGroupIngress:
+        - CidrIp: 0.0.0.0/0
+          FromPort: 80
+          ToPort: 80
+          IpProtocol: tcp
+      VpcId: !Ref VpcToDeployInto
 
 #################################
 # Outputs

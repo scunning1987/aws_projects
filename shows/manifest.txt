@@ -6,6 +6,7 @@ https://raw.githubusercontent.com/scunning1987/aws_projects/main/shows/medialive
 https://raw.githubusercontent.com/scunning1987/aws_projects/main/shows/ui-access-proxy.py
 https://raw.githubusercontent.com/scunning1987/aws_projects/main/shows/jpg-s3-put-rename.py
 https://raw.githubusercontent.com/scunning1987/aws_projects/main/shows/medialive-control-config.py
+https://raw.githubusercontent.com/scunning1987/aws_projects/main/shows/medialive-schedule-cleanup.py
 https://raw.githubusercontent.com/scunning1987/aws_projects/main/shows/sldp-v2.18.1.min.js
 https://raw.githubusercontent.com/scunning1987/aws_projects/main/shows/style.css
 https://raw.githubusercontent.com/scunning1987/aws_projects/main/shows/ui.html

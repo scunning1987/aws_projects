@@ -7,7 +7,7 @@ Parameters:
     Type: String
     Default: tradeshow
     AllowedPattern: ^[a-zA-Z][a-zA-Z0-9]*
-    Description: Prefix to append to all Names Created ; expected value example "TieLine002"
+    Description: Prefix to append to all Names Created ; expected value example "demo"
 
   AZ1:
     Type: AWS::EC2::AvailabilityZone::Name
@@ -22,7 +22,7 @@ Parameters:
   AZ2:
     Type: AWS::EC2::AvailabilityZone::Name
     Default: us-west-2b
-    Description: WILL NOT BE USED - See email confluence docs for details - Target AZ for second HA deployment - IMPORTANT this MUST match the target Subnet for SUBNET2a-b
+    Description: Target AZ for second HA deployment - IMPORTANT this MUST match the target Subnet for SUBNET2a-b
 
   Subnet2:
     Type: AWS::EC2::Subnet::Id
@@ -423,7 +423,7 @@ Resources:
         TimecodeConfig:
           Source: EMBEDDED
       Tags:
-        MediaLive-Workflow: test
+        MediaLive-Demo-Workflow: test
 
 
   EML1b:
@@ -583,7 +583,7 @@ Resources:
         TimecodeConfig:
           Source: EMBEDDED
       Tags:
-        MediaLive-Workflow: test
+        MediaLive-Demo-Workflow: CleanupTask
 
 
   EML2a:
@@ -743,7 +743,7 @@ Resources:
         TimecodeConfig:
           Source: EMBEDDED
       Tags:
-        MediaLive-Workflow: test
+        MediaLive-Demo-Workflow: CleanupTask
 
 
   EML2b:
@@ -903,7 +903,7 @@ Resources:
         TimecodeConfig:
           Source: EMBEDDED
       Tags:
-        MediaLive-Workflow: test
+        MediaLive-Demo-Workflow: CleanupTask
 
   EML3a:
     Type: 'AWS::MediaLive::Channel'
@@ -1062,7 +1062,7 @@ Resources:
         TimecodeConfig:
           Source: EMBEDDED
       Tags:
-        MediaLive-Workflow: test
+        MediaLive-Demo-Workflow: CleanupTask
 
 
   EML3b:
@@ -1222,7 +1222,7 @@ Resources:
         TimecodeConfig:
           Source: EMBEDDED
       Tags:
-        MediaLive-Workflow: test
+        MediaLive-Demo-Workflow: CleanupTask
 
 
   EML4a:
@@ -1382,7 +1382,7 @@ Resources:
         TimecodeConfig:
           Source: EMBEDDED
       Tags:
-        MediaLive-Workflow: test
+        MediaLive-Demo-Workflow: CleanupTask
 
 
   EML4b:
@@ -1542,4 +1542,4 @@ Resources:
         TimecodeConfig:
           Source: EMBEDDED
       Tags:
-        MediaLive-Workflow: test
+        MediaLive-Demo-Workflow: CleanupTask

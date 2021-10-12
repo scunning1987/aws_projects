@@ -18,10 +18,14 @@ DEALINGS IN THE SOFTWARE.
 import json
 import boto3
 import datetime
+import time as t
 import random
 import time
-import base64
 import os
+import base64
+import urllib3
+import math
+
 
 def lambda_handler(event, context):
 
@@ -38,14 +42,14 @@ def lambda_handler(event, context):
         station_code = str(event['channelid'].split(":")[0])
     else:
         channelid = str(event['channelid'])
-        region = "us-east-1"
+        region = "us-west-2"
         station_code = event['channelid']
     maxresults = int(event['maxresults'])
     awsacc = event['awsaccount']
     input = str(event['input'])
     inputkey = event['input'].replace("%2F","/")
     functiontorun = str(event['functiontorun'])
-    follow = event['follow']
+    follow = str(event['follow'])
 
     ###
     flow_action = event['functiontorun']
@@ -53,6 +57,10 @@ def lambda_handler(event, context):
     emxclient = boto3.client('mediaconnect',region_name=region)
 
     ###
+
+    # initialize dynamodb client
+    db_client = boto3.client('dynamodb',region_name=region)
+
 
     if ":" in event['bucket']:
         bucket = event['bucket'].split(":")[0]
@@ -182,7 +190,7 @@ def lambda_handler(event, context):
             itemstodelete = []
             dashboardlistsub = []
 
-            if len(schedule) is 0:
+            if len(schedule) == 0:
                 itemstoreschedule = []
             else:
                 if follow == "true":
@@ -355,30 +363,6 @@ def lambda_handler(event, context):
                 print("Error creating Schedule Action")
                 print(e)
             return response
-        elif type == "drop-prepare":
-            try:
-                response = client.batch_update_schedule(
-                    ChannelId=channelid,
-                    Creates={
-                        'ScheduleActions': [
-                            {
-                                'ActionName': actionname,
-                                'ScheduleActionSettings': {
-                                    'InputPrepareSettings': {},
-                                },
-                                'ScheduleActionStartSettings': {
-                                    'ImmediateModeScheduleActionStartSettings': {}
-
-                                }
-                            },
-                        ]
-                    }
-                )
-                print(json.dumps(response))
-            except Exception as e:
-                print("Error creating Schedule Action")
-                print(e)
-            return response
 
 
         else: # this assumes the type is now LIVE immediate
@@ -488,17 +472,18 @@ def lambda_handler(event, context):
         inputs = list_inputs("dictionary") # return dictionary : file, live, livelist
         channel_info = describe_channel()
         channel_input_attachments = channel_info['InputAttachments']
-        drop_prepare = batch_update("drop-prepare", "", inputs, inputkey,channel_input_attachments)
-        prepare_response = batch_update("input-prepare", "", inputs, inputkey,channel_input_attachments)
-        return {
-            "prepare_stop_response":drop_prepare,
-            "prepare_response":prepare_response
-        }
+        response = batch_update("input-prepare", "", inputs, inputkey,channel_input_attachments)
+        return response
 
     def immediateSwitchLive():
         inputs = list_inputs("dictionary") # return dictionary : file, live, livelist
         channel_info = describe_channel()
         channel_input_attachments = channel_info['InputAttachments']
+
+        # get the live input to switch to
+        for live_input in inputs['live']:
+            if live_input['type'] != "MP4_FILE": # We don't want to go back to a static file, rather a LIVE input, this assumes only a single live input is attached
+                inputkey = live_input['name']
 
         return batch_update("live", "", inputs, inputkey, channel_input_attachments)
 
@@ -583,8 +568,6 @@ def lambda_handler(event, context):
     def channelStartStop():
         ## Check channel status
         ## If status is not what the desired action is, perform the action
-        # channel_state_change_exceptions
-
         channel_summary = client.describe_channel(ChannelId=channelid)
         channel_input_attachments = channel_summary['InputAttachments']
         channel_status = channel_summary['State']
@@ -604,36 +587,11 @@ def lambda_handler(event, context):
                     return "Couldnt change input to slate"
                 '''
                 ## start api
-
-                if follow != "":
-                    # Need to start flows
-                    try:
-                        emx_json = json.loads(base64.b64decode(follow))
-                        ingress_arn = emx_json['ingress']
-                        egress_arn = emx_json['egress']
-                    except Exception as e:
-                        channel_state_change_exceptions.append(e)
-                        return e
-
-                    #startFlow
-                    startFlow(ingress_arn)
-                    startFlow(egress_arn)
-
-                    if len(channel_state_change_exceptions) > 0:
-                        return
-
-
-                # keys = ingress / egress
-
                 try:
                     response = client.start_channel(ChannelId=channelid)
                     return response
                 except Exception as e:
-                    channel_state_change_exceptions.append(e)
                     return e
-
-
-
             else:
                 return "Channel is already Running"
 
@@ -642,27 +600,10 @@ def lambda_handler(event, context):
                 return "Channel already stopping or stopped"
             else:
                 # stop api
-
-                if follow != "":
-                    # Need to start flows
-                    try:
-                        emx_json = json.loads(base64.b64decode(follow))
-                        ingress_arn = emx_json['ingress']
-                        egress_arn = emx_json['egress']
-                    except Exception as e:
-                        channel_state_change_exceptions.append(e)
-                        return e
-
-                    #startFlow
-                    stopFlow(ingress_arn)
-                    stopFlow(egress_arn)
-
-
                 try:
                     response = client.stop_channel(ChannelId=channelid)
                     return response
                 except Exception as e:
-                    channel_state_change_exceptions.append(e)
                     return e
 
     def channelState():
@@ -736,10 +677,7 @@ def lambda_handler(event, context):
         return channelalertlist
 
     def describeChannelState():
-        try:
-            channel_info = describe_channel()
-        except Exception as e:
-            return e
+        channel_info = describe_channel()
         try:
             state = {"status":channel_info['State']}
             return state
@@ -762,203 +700,465 @@ def lambda_handler(event, context):
             return e
             return {"url":"error"}
 
-    def getEntitlementArn(station_code):
-        response = emxclient.list_entitlements(MaxResults=20)
-        entitlement_list = response['Entitlements']
+    def gfxActivate():
+        # Vars we need...
+        # image HTTPS url
 
-        entitlement_arn = ""
-        for entitlement in entitlement_list:
-            if station_code in entitlement['EntitlementName']:
-                entitlement_arn = entitlement['EntitlementArn']
-        return entitlement_arn
+        # Parse vars received in API call
+        gfx_settings_list = event['duration'].split(",") # x + "," + y + "," + gfx_duration + "," + gfx_fade
+        gfx_x = gfx_settings_list[0]
+        gfx_y = gfx_settings_list[1]
+        gfx_duration = int(gfx_settings_list[2]) * 1000
+        gfx_fade = gfx_settings_list[3]
+        gfx_url = "https://%s" % (input)
+        layer = 0 # always layer 0 right now
 
-    def createFlow(entitlement_arn,station_code):
-        print("Create flow function")
+        #generate random action name
+        time = datetime.datetime.utcnow()
+        timestring = time.strftime('%Y-%m-%dT%H%M%SZ')
+        actionname = functiontorun + "_" + str(random.randint(100,999)) + "_" + timestring
 
-        response = emxclient.create_flow(
-            Name='MyZixiFlow',
-            Outputs=[
-                {
-                    'CidrAllowList': [
-                        '0.0.0.0/0',
-                    ],
-                    'Description': 'output to zixi receiver',
-                    'Name': flow_destination,
-                    'Protocol': 'zixi-pull',
-                    'StreamId': flow_destination,
-                    'RemoteId':zixi_remote_id
-                },
-            ],
-            Source={
-                'Description': 'station',
-                'EntitlementArn': entitlement_arn,
-                'Name': 'EntitledSource',
-            })
+        # create schedule actions list for batch submission
+        schedule_actions = []
+
+        if input == "":
+            # deactivate first.
+            schedule_action_deactivate = dict()
+            schedule_action_deactivate['ActionName'] = actionname + "_0"
+            schedule_action_deactivate['ScheduleActionStartSettings'] = {}
+            schedule_action_deactivate['ScheduleActionStartSettings']['ImmediateModeScheduleActionStartSettings'] = {}
+            schedule_action_deactivate['ScheduleActionSettings'] = {}
+            schedule_action_deactivate['ScheduleActionSettings']['StaticImageDeactivateSettings'] = {}
+            schedule_action_deactivate['ScheduleActionSettings']['StaticImageDeactivateSettings']['FadeOut'] = int(gfx_fade)
+            schedule_action_deactivate['ScheduleActionSettings']['StaticImageDeactivateSettings']['Layer'] = int(layer)
+
+            schedule_actions.append(schedule_action_deactivate)
+
+
+            # make the API call to MediaLive
+            response = client.batch_update_schedule(ChannelId=channelid,Creates={'ScheduleActions':schedule_actions})
+
+        else:
+
+            schedule_action_activate = dict()
+            schedule_action_activate['ActionName'] = actionname + "_1"
+            schedule_action_activate['ScheduleActionStartSettings'] = {}
+            schedule_action_activate['ScheduleActionStartSettings']['ImmediateModeScheduleActionStartSettings'] = {}
+            schedule_action_activate['ScheduleActionSettings'] = {}
+            schedule_action_activate['ScheduleActionSettings']['StaticImageActivateSettings'] = {}
+            schedule_action_activate['ScheduleActionSettings']['StaticImageActivateSettings']['Duration'] = int(gfx_duration)
+            schedule_action_activate['ScheduleActionSettings']['StaticImageActivateSettings']['FadeOut'] = int(gfx_fade)
+            schedule_action_activate['ScheduleActionSettings']['StaticImageActivateSettings']['FadeIn'] = int(gfx_fade)
+            schedule_action_activate['ScheduleActionSettings']['StaticImageActivateSettings']['Layer'] = int(layer)
+            schedule_action_activate['ScheduleActionSettings']['StaticImageActivateSettings']['ImageX'] = int(gfx_x)
+            schedule_action_activate['ScheduleActionSettings']['StaticImageActivateSettings']['ImageY'] = int(gfx_y)
+            schedule_action_activate['ScheduleActionSettings']['StaticImageActivateSettings']['Width'] = 480
+            schedule_action_activate['ScheduleActionSettings']['StaticImageActivateSettings']['Height'] = 260
+            schedule_action_activate['ScheduleActionSettings']['StaticImageActivateSettings']['Image'] = {}
+            schedule_action_activate['ScheduleActionSettings']['StaticImageActivateSettings']['Image']['Uri'] = gfx_url
+
+            schedule_actions.append(schedule_action_activate)
+
+            # make the API call to MediaLive
+            response = client.batch_update_schedule(ChannelId=channelid,Creates={'ScheduleActions':schedule_actions})
+
         return response
 
-    def startFlow(flow_arn):
-        print("start flow function")
+    def channelReservation():
 
-        try:
-            describe_flow_response = emxclient.describe_flow(FlowArn=flow_arn)
-        except Exception as e:
-            channel_state_change_exceptions.append(e)
-            return "Could not get flow details"
+        template_response = dict()
+        template_response["1"] = {"reservation_end_time":"0","reservation_name":"na"}
+        template_response["2"] = {"reservation_end_time":"0","reservation_name":"na"}
+        template_response["3"] = {"reservation_end_time":"0","reservation_name":"na"}
+        template_response["4"] = {"reservation_end_time":"0","reservation_name":"na"}
 
-        if describe_flow_response['Flow']['Status'] == "STANDBY":
+        if input == "reservationsCheck":
+
+            # get all items from Dynamo
+            # iterate through
+            # respond
+
+            # Function to get DB Item that needs playing
+
+            response = db_client.scan(TableName='ChannelReservation',Limit=10)
+
+            items = response['Items']
+
+            for channel in channelid.split(','):
+
+                try:
+                    for item in items:
+                        if channel == item['channel']['S']:
+                            time = item['reservation_end_time']['S']
+                            name = item['reservation_name']['S']
+                            template_response[channel] = {"reservation_end_time":time,"reservation_name":name}
+                except Exception as e:
+                    template_response[channel] = {"reservation_end_time":"0","reservation_name":"NA"}
+
+            return template_response
+
+        else: # this is a reservation attempt
+            # awsaccount=master&functiontorun=channelReservation&channelid=2&maxresults=200&bucket=scott&input=makeReservation&follow=300
+            reserve_status = dict()
+
+            channel_number = channelid
+            reservation_name = bucket
+            reservation_end_time = int(follow)
+            # need to see if the item exists first, and see if a reservation is currently under way
+            # update db item or respond back to api call with issue on reservation
 
             try:
-                response = emxclient.start_flow(FlowArn=flow_arn)
-                return response
-            except Exception as e:
-                channel_state_change_exceptions.append(e)
-                return "Could not start flow"
+                get_item_response = db_client.get_item(TableName='ChannelReservation',Key={"channel":{"S":channel_number}})
 
+                if "Item" in get_item_response:
+                    reserve_status['herecheck'] = get_item_response['Item']['reservation_end_time']['S']
+                    nowtime = datetime.datetime.utcnow()
+                    nowtimeepoch = int(nowtime.strftime('%s'))
 
-        else:
-            return "INFO: Flow is active, nothing to do"
-
-
-
-    def stopFlow(flow_arn):
-        print("stop flow function")
-
-        try:
-            describe_flow_response = emxclient.describe_flow(FlowArn=flow_arn)
-        except Exception as e:
-            channel_state_change_exceptions.append(e)
-            return "Could not get flow details"
-
-        if describe_flow_response['Flow']['Status'] == "STANDBY" or describe_flow_response['Flow']['Status'] == "STOPPING":
-
-            return "INFO: Flow is idle, nothing to do"
-
-        else:
-
-            try:
-                response = emxclient.stop_flow(FlowArn=flow_arn)
-                return response
-            except Exception as e:
-                channel_state_change_exceptions.append(e)
-                return "Could not start flow"
-
-
-    def listFlows():
-        print("list flows")
-        response = emxclient.list_flows(MaxResults=123)
-        return response
-
-    def deleteFlow(flow_arn):
-        response = emxclient.delete_flow(FlowArn=flow_arn)
-        return response
-
-    ## END OF FUNCTIONS
-
-    if flow_action == "startflow":
-        print("INFO : Attempting to start flow - MyZixiFlow")
-        print("INFO : Getting list of flows to see if MyZixiFlow exists...")
-
-        entitlement_arn = getEntitlementArn(station_code)
-        flow_list = listFlows()
-        flow_exists = 0
-        flow_details = []
-        for flow in flow_list['Flows']:
-            if flow['Name'] == "MyZixiFlow":
-                flow_exists = 1
-                flow_details = flow
-
-        if flow_exists == 1:
-            # Just Edit Flow's Source ARN
-            print("INFO : MyZixiFlow Flow exists.. Moving on to amend source arn with selected entitlement arn %s" % (entitlement_arn))
-            flow_arn = flow_details['FlowArn']
-
-            response = emxclient.describe_flow(FlowArn=flow_arn)
-
-            # Check if source is already set to the entitlement arn desired
-            if "EntitlementArn" in response['Flow']['Source'].keys():
-                if response['Flow']['Source']['EntitlementArn'] == entitlement_arn:
-                    print("INFO: No action needed on amending source, flow entitlement arn is %s" % (response['Flow']['Source']['EntitlementArn']))
-                    if response['Flow']['Status'] == "STANDBY":
-                        return startFlow(flow_arn)
+                    if int(get_item_response['Item']['reservation_end_time']['S']) < nowtimeepoch:
+                        reserve_now = True
                     else:
-                        return "INFO: Flow is active"
-                else:
-                    source_arn = response['Flow']['Source']['SourceArn']
-                    flow_status = response['Flow']['Status']
-                    if flow_status != "STANDBY":
-                        emxclient.stop_flow(FlowArn=flow_arn)
-                    while flow_status != "STANDBY":
-                        flow_details = emxclient.describe_flow(FlowArn=flow_arn)
-                        flow_status = flow_details['Flow']['Status']
-                        print("INFO: Flow must be in STANDBY state to be deleted; current status : %s" % (flow_status))
-                        time.sleep(3)
+                        reserve_now = False
+                        reserve_status['status'] = "FAILED"
+                        reserve_status['message'] = "Channel already reserved, please try again later"
+                        reserve_status[channel_number] = {}
+                        reserve_status[channel_number]['reservation_end_time'] = get_item_response['Item']['reservation_end_time']['S']
+                        reserve_status[channel_number]['reservation_name'] = get_item_response['Item']['reservation_name']['S']
 
-                    response = emxclient.update_flow_source(EntitlementArn=entitlement_arn,FlowArn=flow_arn,SourceArn=source_arn)
-                    if flow_status == "STANDBY":
-                        return startFlow(flow_arn)
-                    else:
-                        return "INFO: Flow is active"
+                else:
+                    # item not created yet.
+                    reserve_now = True
+
+                if reserve_now:
+
+                    item_body = {
+                        "channel": {
+                            "S": channel_number
+                        },
+                        "reservation_end_time": {
+                            "S": str(reservation_end_time)
+                        },
+                        "reservation_name": {
+                            "S": reservation_name
+                        }
+                    }
+                    reserve_status['detail2'] = item_body
+                    # put updated item with new end time and alias
+                    put_item_response = db_client.put_item(TableName='ChannelReservation',Item=item_body)
+                    reserve_status['status'] = "SUCCESS"
+                    reserve_status['message'] = "Channel reserved successfully"
+                    reserve_status[channel_number] = {}
+                    reserve_status[channel_number]['reservation_end_time'] = str(reservation_end_time)
+                    reserve_status[channel_number]['reservation_name'] = reservation_name
+            except Exception as e:
+                reserve_status['status'] = "FAILED"
+                reserve_status['message'] = "Something went wrong when reserving the channel. Please try again later"
+                reserve_status['detail'] = str(e)
+            return reserve_status
+
+    def html5Activate():
+
+        # this function activates the html5 graphics page for a set duration, then sends an API call to the html5 endpoint to clear all graphics off, ready for demo
+
+        #generate random action name
+        time = datetime.datetime.utcnow()
+        timestring = time.strftime('%Y-%m-%dT%H%M%SZ')
+        actionname = functiontorun + "_" + str(random.randint(100,999)) + "_" + timestring
+
+        html5_activate_json = json.loads(base64.b64decode(input))
+        duration = int(html5_activate_json['duration'])
+        url = html5_activate_json['url']
+        html5_endpoint = html5_activate_json['html5_apiendpoint_ctrl']
+
+        # create schedule actions list for batch submission
+        schedule_actions = []
+
+        schedule_action_activate = dict()
+        schedule_action_activate['ActionName'] = actionname + "_1"
+        schedule_action_activate['ScheduleActionStartSettings'] = {}
+        schedule_action_activate['ScheduleActionStartSettings']['ImmediateModeScheduleActionStartSettings'] = {}
+        schedule_action_activate['ScheduleActionSettings'] = {}
+        schedule_action_activate['ScheduleActionSettings']['MotionGraphicsImageActivateSettings'] = {}
+        schedule_action_activate['ScheduleActionSettings']['MotionGraphicsImageActivateSettings']['Duration'] = duration
+        schedule_action_activate['ScheduleActionSettings']['MotionGraphicsImageActivateSettings']['Url'] = url
+
+        schedule_actions.append(schedule_action_activate)
+
+        # make the API call to MediaLive
+        response = client.batch_update_schedule(ChannelId=channelid,Creates={'ScheduleActions':schedule_actions})
+
+        # Clear HTML5 compositions
+        # Create urllib3 pool manager
+        http = urllib3.PoolManager()
+
+        # Get the html5 appinstance compositions
+        get_response = http.request('GET', html5_endpoint)
+
+        if get_response.status != 200:
+            # Exit the script with errors
+            return "Unable to get file from location : %s " % (html5_endpoint)
         else:
-            # Create a Flow
-            if len(entitlement_arn) > 0:
-                print("entitlement arn : %s" %(entitlement_arn))
-                create_flow_response = createFlow(entitlement_arn,station_code)
+            # Continue and upload to S3
+            compositions = json.loads(get_response.data)
 
-                if create_flow_response['ResponseMetadata']['HTTPStatusCode'] == 201:
-                    flow_arn = create_flow_response['Flow']['FlowArn']
-                    return startFlow(flow_arn)
-                else:
-                    print("ERROR : Failed to Create flow : %s " % (create_flow_response))
-                    return "ERROR : Failed to Create flow : %s " % (create_flow_response)
+        # "Baseline - Crawl" "Score Bug - Soccer" "Lower - 2 Line" "Bug - Social"
+        new_compositions = []
+        for i in range(0,len(compositions)):
+            composition = compositions[i]
+            if composition['compositionName'] == "Baseline - Crawl":
+                # we are deactivating overlay
+                del composition['animation']['state']
+                composition['animation']['action'] = "play"
+                composition['animation']['to'] = "Out1"
+                composition['controlNode']['payload']['Ticker Text'] = " ~ "
 
-    elif flow_action == "stopflow":
-        print("INFO : Stopping flow")
+                new_compositions.append(composition)
+            elif composition['compositionName'] == "Score Bug - Soccer":
+                # we are deactivating overlay
+                del composition['animation']['state']
+                composition['animation']['action'] = "play"
+                composition['animation']['to'] = "Out1"
+                new_compositions.append(composition)
+            elif composition['compositionName'] == "Lower - 2 Line":
+                # we are deactivating overlay
+                del composition['animation']['state']
+                composition['animation']['action'] = "play"
+                composition['animation']['to'] = "Out1"
+                new_compositions.append(composition)
+            elif composition['compositionName'] == "Bug - Social":
+                # we are deactivating overlay
+                del composition['animation']['state']
+                composition['animation']['action'] = "play"
+                composition['animation']['to'] = "Out1"
+                new_compositions.append(composition)
 
-        flow_list = listFlows()
-        flow_arn = ""
-        flow_exists = 0
-        for flow in flow_list['Flows']:
-            if flow['Name'] == "MyZixiFlow":
-                flow_arn = flow['FlowArn']
-                flow_exists = 1
-                print("INFO : Flow exists, the current state is %s" % (flow['Status']))
-                if flow['Status'] == "ACTIVE":
-                    print("INFO : Stopping the flow")
-                    response = emxclient.stop_flow(FlowArn=flow_arn)
-                    return response
-                else:
-                    print("INFO : Flow exists but is not in active state. Current state is %s" % (flow['Status']))
-                    return "INFO : Flow exists but is not in active state. Current state is %s" % (flow['Status'])
-        if flow_exists == 0:
-            print("INFO : Flow doesn't exist. Nothing to stop...")
-            return "INFO : Flow doesn't exist. Nothing to stop..."
+        new_compositions = json.dumps(new_compositions)
 
-    elif flow_action == "checkflow":
-        print("INFO : Checking if flow exists and is currently outputting to the selected destination")
+        # Update the html5 render via API
+        put_response = http.request('PUT', html5_endpoint,body=new_compositions,headers={"Content-Type": "application/json"})
 
-        flow_list = listFlows()
-        flow_arn = ""
-        flow_exists = 0
+        return {
+            "medialive_response":response,
+            "html5_ctrl_response":put_response.status
+        }
+        #
+        # ADD LATER : API CALL TO HTML5 ENDPOINT TO CLEAR GRAPHICS
+        #
 
-        for flow in flow_list['Flows']:
-            if flow['Name'] == "MyZixiFlow":
-                flow_arn = flow['FlowArn']
-                flow_exists = 1
-                print("INFO : Flow exists, the current state is %s" % (flow['Status']))
-                if flow['Status'] == "ACTIVE":
-                    # describe flow
-                    response = emxclient.describe_flow(FlowArn=flow_arn)
-                    flow_output_name = response['Flow']['Outputs'][0]['Name'].upper()
-                    flow_source_name = response['Flow']['Source']['EntitlementArn'].split(":")[-1].upper()
-                    print("INFO : Flow exists and is active, the current destination is %s" % (flow_output_name))
-                    return {"flow_active":1,"flow_destination":flow_output_name,"flow_source":flow_source_name}
-                else:
-                    # exit
-                    print("INFO : Flow exists but is not currently outputting")
-                    return {"flow_active":0,"flow_destination":""}
-        if flow_exists == 0:
-            print("INFO : Flow doesnt exist")
-            return {"flow_active":0,"flow_destination":""}
+    def html5Graphics():
+
+        response_status = dict()
+
+        # Create urllib3 pool manager
+        http = urllib3.PoolManager()
+
+        html5_json = json.loads(base64.b64decode(input))
+
+        type = html5_json['type'] # html5 graphics type
+        onoff = html5_json['onoff'] # activate / deactivate
+        html5_endpoint = html5_json['html5_endpoint']
+
+        # Get the html5 appinstance compositions
+        get_response = http.request('GET', html5_endpoint)
+
+        if get_response.status != 200:
+            # Exit the script with errors
+            return "Unable to get file from location : %s " % (html5_endpoint)
+        else:
+            # Continue and upload to S3
+            compositions = json.loads(get_response.data)
+
+        inout = ""
+        if onoff == "activate":
+            inout = "In"
+        else:
+            inout = "Out1"
+
+        response_status['Activation_Type'] = inout
+
+        response_status['Overlay_Type'] = type
+
+        if type == "ticker":
+            ticker_title = html5_json['ticker_title']
+            ticker_text = html5_json['ticker_text']
+            ticker_speed = html5_json['ticker_speed']
+            composition_name = "Baseline - Crawl"
+
+            # find the right composition
+            for i in range(0,len(compositions)):
+                composition = compositions[i]
+                if composition['compositionName'] == composition_name:
+                    if inout == "In":
+                        # we are enabling overlay with features
+                        del composition['animation']['state']
+                        composition['animation']['action'] = 'play'
+                        composition['animation']['to'] = inout
+                        composition['controlNode']['payload']['Ticker Text'] = ticker_text
+                        composition['controlNode']['payload']['Ticker Text Speed'] = ticker_speed
+                        composition['controlNode']['payload']['Title'] = ticker_title
+                    else:
+                        # we are deactivating overlay
+                        del composition['animation']['state']
+                        composition['animation']['action'] = 'play'
+                        composition['animation']['to'] = inout
+
+                    key_composition = composition
+        elif "score" in type:
+            team_1_name = html5_json['team_1_name']
+            team_2_name = html5_json['team_2_name']
+            team_1_score = html5_json['team_1_score']
+            team_2_score = html5_json['team_2_score']
+            match_clock_start = html5_json['match_clock_start']
+            match_clock_minutes = match_clock_start.split(":")[0]
+            match_clock_seconds = match_clock_start.split(":")[1]
+            match_clock_control = html5_json['match_clock_control']
+            match_half = html5_json['match_half']
+            composition_name = "Score Bug - Soccer"
+
+            # find the right composition
+            for i in range(0,len(compositions)):
+                composition = compositions[i]
+                if composition['compositionName'] == composition_name:
+                    if inout == "In":
+                        # we are enabling overlay with features
+
+                        if type == "score":
+
+                            del composition['animation']['state']
+                            composition['animation']['action'] = 'play'
+                            composition['animation']['to'] = inout
+                            composition['controlNode']['payload']['Team 1 Name'] = team_1_name
+                            composition['controlNode']['payload']['Team 1 Score'] = team_1_score
+                            composition['controlNode']['payload']['Team 2 Name'] = team_2_name
+                            composition['controlNode']['payload']['Team 2 Score'] = team_2_score
+                            composition['controlNode']['payload']['Match Clock - Minutes'] = str(int(match_clock_minutes))
+                            composition['controlNode']['payload']['Match Clock - Seconds'] = str(int(match_clock_seconds))
+                            composition['controlNode']['payload']['Half'] = match_half
+                            composition['controlNode']['payload']['Match Clock - Control']['isRunning'] = False
+                            composition['controlNode']['payload']['Match Clock - Control']['value'] = 0
+
+                            # configure clock
+                            epoch_time_now = math.floor(time.time()) * 1000
+                            #start_epoch_time = (int(epoch_time_now) - ( int(match_clock_minutes) * 60 ) - int(match_clock_seconds)) + int(composition['controlNode']['payload']['Match Clock - Control']['value'])
+                            start_epoch_time = int(epoch_time_now) - ((( int(match_clock_minutes) * 60 ) - int(match_clock_seconds)) * 1000 )
+
+                            composition['controlNode']['payload']['Match Clock - Control']['UTC'] = start_epoch_time
+                        elif type == "score-score1update":
+                            # update score for team 1
+                            composition['controlNode']['payload']['Team 1 Score'] = team_1_score
+
+                        elif type == "score-score2update":
+                            # update score for team 2
+                            composition['controlNode']['payload']['Team 2 Score'] = team_2_score
+
+                        elif type == "score-matchcontrolstart":
+                            # change isrunning to true
+                            composition['controlNode']['payload']['Match Clock - Control']['isRunning'] = True
+
+                            # calculate start time of clock
+                            epoch_time_now = math.floor(time.time()) * 1000 #datetime.datetime.utcnow().strftime('%s') * 1000
+                            clock_time_epochms = ((int(match_clock_minutes) * 60) + int(match_clock_seconds)) * 1000
+
+                            start_epoch_time = int(epoch_time_now) - int(clock_time_epochms) - int(composition['controlNode']['payload']['Match Clock - Control']['value'])
+
+
+                            composition['controlNode']['payload']['Match Clock - Control']['UTC'] = start_epoch_time
+                            composition['controlNode']['payload']['Match Clock - Control']['value'] = 0
+
+
+                        elif type == "score-matchcontrolstop":
+                            # stop clock and put epoch value of elapsed time in the value field
+                            composition['controlNode']['payload']['Match Clock - Control']['isRunning'] = False
+
+                            # calculate pause time value
+                            epoch_time_now = math.floor(time.time()) * 1000
+                            pause_time = int(epoch_time_now) - int(composition['controlNode']['payload']['Match Clock - Control']['UTC'])
+
+                            composition['controlNode']['payload']['Match Clock - Control']['UTC'] = epoch_time_now
+                            composition['controlNode']['payload']['Match Clock - Control']['value'] = pause_time
+
+
+                        elif type == "score-matchcontrolreset":
+                            # reset and change running value to false
+                            composition['controlNode']['payload']['Match Clock - Control']['isRunning'] = False
+
+                            epoch_time_now = math.floor(time.time()) * 1000
+                            startover_epoch_time = int(epoch_time_now) - ((( int(match_clock_minutes) * 60 ) - int(match_clock_seconds)) * 1000 )
+
+                            composition['controlNode']['payload']['Match Clock - Control']['UTC'] = startover_epoch_time
+                            composition['controlNode']['payload']['Match Clock - Control']['value'] = 0
+
+
+                    else:
+                        # we are deactivating overlay
+                        del composition['animation']['state']
+                        composition['animation']['action'] = 'play'
+                        composition['animation']['to'] = inout
+
+                    key_composition = composition
+
+        elif type == "lthird":
+            line_1_text = html5_json['line_1_text']
+            line_2_text = html5_json['line_2_text']
+            composition_name = "Lower - 2 Line"
+
+            # find the right composition
+            for i in range(0,len(compositions)):
+                composition = compositions[i]
+                if composition['compositionName'] == composition_name:
+                    if inout == "In":
+                        # we are enabling overlay with features
+                        del composition['animation']['state']
+                        composition['animation']['action'] = 'play'
+                        composition['animation']['to'] = inout
+                        composition['controlNode']['payload']['Line One Text'] = line_1_text
+                        composition['controlNode']['payload']['Line Two Text'] = line_2_text
+                    else:
+                        # we are deactivating overlay
+                        del composition['animation']['state']
+                        composition['animation']['action'] = 'play'
+                        composition['animation']['to'] = inout
+
+                    key_composition = composition
+
+        else: # "social-bug"
+            social_url = html5_json['social_url']
+            social_text = html5_json['social_text']
+            composition_name = "Bug - Social"
+
+            # find the right composition
+            for i in range(0,len(compositions)):
+                composition = compositions[i]
+                if composition['compositionName'] == composition_name:
+                    if inout == "In":
+                        # we are enabling overlay with features
+                        del composition['animation']['state']
+                        composition['animation']['action'] = 'play'
+                        composition['animation']['to'] = inout
+                        composition['controlNode']['payload']['socialMediaLogo'] = social_url
+                        composition['controlNode']['payload']['text'] = social_text
+                    else:
+                        # we are deactivating overlay
+                        del composition['animation']['state']
+                        composition['animation']['action'] = 'play'
+                        composition['animation']['to'] = inout
+
+                    key_composition = composition
+
+        response_status['Composition_Body'] = key_composition
+
+        new_compositions = []
+        new_compositions.append(key_composition)
+        new_compositions = json.dumps(new_compositions)
+
+        # Update the html5 render via API
+        put_response = http.request('PUT', html5_endpoint,body=new_compositions,headers={"Content-Type": "application/json"})
+
+        response_status['htmlUpdateResponseCode'] = put_response.status
+
+        return response_status
+
+    ### END OF FUNCTIONS ###
 
 
     if functiontorun == "getSchedule":
@@ -992,16 +1192,8 @@ def lambda_handler(event, context):
         response = scteInject()
         return api_response(200,response)
     elif functiontorun == "channelStartStop":
-        channel_state_change_exceptions = []
-        channel_state_change_exceptions.clear()
-
         response = channelStartStop()
-
-        if len(channel_state_change_exceptions) > 0:
-            return api_response(500,channel_state_change_exceptions)
-        else:
-            return api_response(200,response)
-
+        return api_response(200,response)
     elif functiontorun == "channelState":
         response = channelState()
         return api_response(200,response)
@@ -1013,6 +1205,21 @@ def lambda_handler(event, context):
         return api_response(200,response)
     elif functiontorun == "presignGenerator":
         response = presignGenerator()
+        return api_response(200,response)
+    elif functiontorun == "gfxActivate":
+        response = gfxActivate()
+        return api_response(200,response)
+    elif functiontorun == "gfxDeactivate":
+        response = gfxActivate()
+        return api_response(200,response)
+    elif functiontorun == "html5Activate":
+        response = html5Activate()
+        return api_response(200,response)
+    elif functiontorun == "channelReservation":
+        response = channelReservation()
+        return api_response(200,response)
+    elif functiontorun == "html5Graphics":
+        response = html5Graphics()
         return api_response(200,response)
 
     else: # return error#
